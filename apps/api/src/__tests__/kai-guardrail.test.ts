@@ -88,8 +88,31 @@ const validPatient = {
     {
       id: 'prog-1',
       items: [
-        { exercise: { nameDe: 'Brücke' } },
-        { exercise: { nameDe: 'Wandsitz' } },
+        { exercise: { nameDe: 'Brücke' }, adaptations: [] },
+        { exercise: { nameDe: 'Wandsitz' }, adaptations: [] },
+      ],
+    },
+  ],
+};
+
+const patientWithAdaptation = {
+  ...validPatient,
+  programs: [
+    {
+      id: 'prog-1',
+      items: [
+        {
+          exercise: { nameDe: 'Brücke' },
+          adaptations: [
+            {
+              adaptation: {
+                labelDe: 'Hohlkreuz vermeiden',
+                instructionDe: 'Hebe die Hüfte nur so weit, wie der untere Rücken flach bleibt.',
+              },
+            },
+          ],
+        },
+        { exercise: { nameDe: 'Wandsitz' }, adaptations: [] },
       ],
     },
   ],
@@ -166,5 +189,52 @@ describe('POST /api/v1/p/:token/chat — Guardrail im System-Prompt', () => {
     expect(callArgs.system).toContain('Keine medizinischen Ratschläge');
     expect(callArgs.system).toContain('Bitte wende dich dazu direkt an deine Therapeutin oder deinen Therapeuten');
     expect(callArgs.system).toContain('Physiotherapie am Markt');
+  });
+});
+
+// ── Integration-Tests: Zugewiesene Anpassungen im Kai-Kontext ────────────────
+
+describe('POST /api/v1/p/:token/chat — Übungs-Anpassungen im Kontext', () => {
+  beforeEach(() => {
+    vi.mocked(prisma.chatMessage.count).mockResolvedValue(0);
+    vi.mocked(prisma.chatMessage.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.chatMessage.create).mockResolvedValue({} as any);
+    mockAnthropicCreate.mockClear();
+  });
+
+  it('gibt eine zugewiesene Anpassung wortgetreu im System-Prompt an Kai weiter', async () => {
+    vi.mocked(prisma.patient.findUnique).mockResolvedValue(patientWithAdaptation as any);
+
+    await request(app)
+      .post('/api/v1/p/valid-token-abc/chat')
+      .send({ message: 'Wie mache ich die Brücke bei meinem Hohlkreuz?' });
+
+    const callArgs = mockAnthropicCreate.mock.calls[0]?.[0] as { system: string };
+    expect(callArgs.system).toContain('Hebe die Hüfte nur so weit, wie der untere Rücken flach bleibt.');
+    expect(callArgs.system).toContain('wortgetreu wieder');
+  });
+
+  it('enthält die Weiterleitungs-Formulierung für nicht zugewiesene Anpassungen, wenn Anpassungen vorhanden sind', async () => {
+    vi.mocked(prisma.patient.findUnique).mockResolvedValue(patientWithAdaptation as any);
+
+    await request(app)
+      .post('/api/v1/p/valid-token-abc/chat')
+      .send({ message: 'Gibt es eine Variante für meinen Wandsitz?' });
+
+    const callArgs = mockAnthropicCreate.mock.calls[0]?.[0] as { system: string };
+    expect(callArgs.system).toContain(
+      'Das solltest du direkt mit deiner Therapeutin oder deinem Therapeuten besprechen — sie oder er kann die Übung für dich anpassen.',
+    );
+  });
+
+  it('enthält keinen Anpassungs-Abschnitt, wenn keine Anpassungen zugewiesen sind', async () => {
+    vi.mocked(prisma.patient.findUnique).mockResolvedValue(validPatient as any);
+
+    await request(app)
+      .post('/api/v1/p/valid-token-abc/chat')
+      .send({ message: 'Wie lange soll ich die Übung halten?' });
+
+    const callArgs = mockAnthropicCreate.mock.calls[0]?.[0] as { system: string };
+    expect(callArgs.system).not.toContain('individuelle Anpassungen ausgewählt');
   });
 });
