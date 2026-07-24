@@ -15,12 +15,13 @@ enum UserRole {
 // ── DOMAIN MODELS ────────────────────────────────────────────────────────────
 
 model Practice {
-  id                 String    @id @default(cuid())
+  id                 String               @id @default(cuid())
   name               String
-  subscriptionStatus String    @default("trial")
-  createdAt          DateTime  @default(now())
+  subscriptionStatus String               @default("trial")
+  createdAt          DateTime             @default(now())
   users              User[]
   patients           Patient[]
+  adaptations        ExerciseAdaptation[]
 }
 
 // practiceId nullable: better-auth erstellt den User zuerst (ohne Praxis-Kontext),
@@ -57,7 +58,7 @@ model Patient {
 }
 
 model Exercise {
-  id                 String            @id @default(cuid())
+  id                 String               @id @default(cuid())
   nameDe             String
   descriptionDe      String
   videoUrl           String?
@@ -70,6 +71,7 @@ model Exercise {
   defaultHoldSeconds Int?
   programItems       ProgramExercise[]
   sessionLogs        SessionLog[]
+  adaptations        ExerciseAdaptation[]
 }
 
 model ExerciseProgram {
@@ -86,16 +88,70 @@ model ExerciseProgram {
 }
 
 model ProgramExercise {
-  id               String          @id @default(cuid())
+  id               String                      @id @default(cuid())
   programId        String
-  program          ExerciseProgram @relation(fields: [programId], references: [id])
+  program          ExerciseProgram             @relation(fields: [programId], references: [id])
   exerciseId       String
-  exercise         Exercise        @relation(fields: [exerciseId], references: [id])
+  exercise         Exercise                    @relation(fields: [exerciseId], references: [id])
   sets             Int
   reps             Int
   holdSeconds      Int?
   frequencyPerWeek Int
   order            Int
+  // Freie Anmerkung des Therapeuten zu dieser Übung für diesen Patienten.
+  therapistNote    String?
+  adaptations      ProgramExerciseAdaptation[]
+}
+
+// ── ÜBUNGS-ANPASSUNGEN ───────────────────────────────────────────────────────
+// Regulatorisch verbindlich (siehe TASK_ADAPTATIONS.md): Die Zuweisung einer
+// Anpassung ist IMMER eine explizite, manuelle Entscheidung des Therapeuten.
+// Es darf keine Logik geben, die eine ExerciseAdaptation automatisch anhand
+// von Patientenmerkmalen (BMI, Alter, Diagnose, ...) vorschlägt oder zuweist.
+
+model ExerciseAdaptation {
+  id         String   @id @default(cuid())
+  exerciseId String
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+
+  // Kurzlabel für die Therapeuten-Auswahlliste, z. B. "Hohlkreuz"
+  labelDe String
+
+  // Der Hinweistext, den der Patient sieht
+  instructionDe String
+
+  // Gruppierung für die UI: "haltung" | "koerperbau" | "beweglichkeit" | "hilfsmittel" | "schonung"
+  category String
+
+  // Optional: abweichendes Demo-Medium für diese Variante (Phase 3, vorerst null)
+  videoUrl String?
+
+  // true = von uns geseedet, false = von der Praxis selbst angelegt
+  isSystem Boolean @default(true)
+
+  // Nur gesetzt bei praxiseigenen Anpassungen (isSystem = false).
+  // Mandantentrenner: praxiseigene Anpassungen dürfen niemals in anderen
+  // Praxen sichtbar oder zuweisbar sein — siehe programs.ts-Validierung.
+  practiceId String?
+  practice   Practice? @relation(fields: [practiceId], references: [id])
+
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  selections ProgramExerciseAdaptation[]
+}
+
+// Verknüpfungstabelle: welche Anpassung hat der Therapeut für diese
+// konkrete Übung in diesem konkreten Programm ausgewählt?
+model ProgramExerciseAdaptation {
+  id                String             @id @default(cuid())
+  programExerciseId String
+  programExercise   ProgramExercise    @relation(fields: [programExerciseId], references: [id], onDelete: Cascade)
+  adaptationId      String
+  adaptation        ExerciseAdaptation @relation(fields: [adaptationId], references: [id])
+  createdAt         DateTime           @default(now())
+
+  @@unique([programExerciseId, adaptationId])
 }
 
 model SessionLog {
