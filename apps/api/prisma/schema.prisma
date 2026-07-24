@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  therapist
+}
+
+// ── DOMAIN MODELS ────────────────────────────────────────────────────────────
+
+model Practice {
+  id                 String    @id @default(cuid())
+  name               String
+  subscriptionStatus String    @default("trial")
+  createdAt          DateTime  @default(now())
+  users              User[]
+  patients           Patient[]
+}
+
+// practiceId nullable: better-auth erstellt den User zuerst (ohne Praxis-Kontext),
+// die Registration-Route setzt practiceId + role direkt danach in einer DB-Transaktion.
+// Alle geschützten Routen prüfen, dass practiceId gesetzt ist.
+model User {
+  id            String            @id
+  practiceId    String?
+  practice      Practice?         @relation(fields: [practiceId], references: [id])
+  email         String            @unique
+  emailVerified Boolean           @default(false)
+  name          String
+  image         String?
+  role          UserRole          @default(therapist)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  programs      ExerciseProgram[]
+}
+
+model Patient {
+  id                 String            @id @default(cuid())
+  practiceId         String
+  practice           Practice          @relation(fields: [practiceId], references: [id])
+  name               String
+  emailOrPhone       String?
+  dateOfBirth        DateTime?
+  magicLinkToken     String            @unique
+  magicLinkExpiresAt DateTime?
+  createdAt          DateTime          @default(now())
+  programs           ExerciseProgram[]
+  chatMessages       ChatMessage[]
+}
+
+model Exercise {
+  id                 String            @id @default(cuid())
+  nameDe             String
+  descriptionDe      String
+  videoUrl           String?
+  thumbnailUrl       String?
+  muscleGroups       String[]
+  bodyRegion         String
+  difficulty         Int
+  defaultSets        Int
+  defaultReps        Int
+  defaultHoldSeconds Int?
+  programItems       ProgramExercise[]
+  sessionLogs        SessionLog[]
+}
+
+model ExerciseProgram {
+  id          String            @id @default(cuid())
+  patientId   String
+  patient     Patient           @relation(fields: [patientId], references: [id])
+  therapistId String
+  therapist   User              @relation(fields: [therapistId], references: [id])
+  name        String
+  notes       String?
+  createdAt   DateTime          @default(now())
+  items       ProgramExercise[]
+  logs        SessionLog[]
+}
+
+model ProgramExercise {
+  id               String          @id @default(cuid())
+  programId        String
+  program          ExerciseProgram @relation(fields: [programId], references: [id])
+  exerciseId       String
+  exercise         Exercise        @relation(fields: [exerciseId], references: [id])
+  sets             Int
+  reps             Int
+  holdSeconds      Int?
+  frequencyPerWeek Int
+  order            Int
+}
+
+model SessionLog {
+  id          String          @id @default(cuid())
+  programId   String
+  program     ExerciseProgram @relation(fields: [programId], references: [id])
+  exerciseId  String
+  exercise    Exercise        @relation(fields: [exerciseId], references: [id])
+  completedAt DateTime        @default(now())
+  painLevel   Int?
+  note        String?
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id])
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+}
+
+// ── BETTER-AUTH TABLES ────────────────────────────────────────────────────────
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([accountId, providerId])
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
