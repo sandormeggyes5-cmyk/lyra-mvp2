@@ -55,6 +55,8 @@ const activePatient = {
           reps: 12,
           holdSeconds: null,
           frequencyPerWeek: 3,
+          therapistNote: null,
+          adaptations: [],
           exercise: {
             id: 'ex-1',
             nameDe: 'Brücke',

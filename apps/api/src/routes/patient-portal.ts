@@ -1,7 +1,7 @@
 import { Router, type Response } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import { prisma } from '../lib/prisma.js';
-import { KAI_DAILY_LIMIT, buildKaiPrompt } from '../lib/kai.js';
+import { KAI_DAILY_LIMIT, buildKaiPrompt, type KaiAdaptationContext } from '../lib/kai.js';
 
 const router = Router();
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -19,7 +19,10 @@ async function fetchPatient(token: string) {
         include: {
           items: {
             orderBy: { order: 'asc' },
-            include: { exercise: true },
+            include: {
+              exercise: true,
+              adaptations: { include: { adaptation: true } },
+            },
           },
         },
       },
@@ -68,6 +71,15 @@ router.get('/:token', async (req, res) => {
         reps: i.reps,
         holdSeconds: i.holdSeconds,
         frequencyPerWeek: i.frequencyPerWeek,
+        therapistNote: i.therapistNote,
+        // Vom Therapeuten zugewiesene Anpassungen — siehe kai.ts für die
+        // Regel, dass Kai diese nur wortgetreu wiedergeben darf.
+        adaptations: i.adaptations.map(a => ({
+          id: a.adaptation.id,
+          labelDe: a.adaptation.labelDe,
+          instructionDe: a.adaptation.instructionDe,
+          category: a.adaptation.category,
+        })),
         exercise: {
           id: i.exercise.id,
           nameDe: i.exercise.nameDe,
@@ -152,6 +164,18 @@ router.post('/:token/chat', async (req, res) => {
     .flatMap(p => p.items.map(i => i.exercise.nameDe))
     .join(', ');
 
+  // Nur vom Therapeuten zugewiesene Anpassungen landen im Kontext — Kai darf
+  // laut Prompt (kai.ts) nur diese wortgetreu wiedergeben, nie eigene erfinden.
+  const adaptationsContext: KaiAdaptationContext[] = patient.programs.flatMap(p =>
+    p.items.flatMap(i =>
+      i.adaptations.map(a => ({
+        exerciseName: i.exercise.nameDe,
+        labelDe: a.adaptation.labelDe,
+        instructionDe: a.adaptation.instructionDe,
+      })),
+    ),
+  );
+
   // Letzten 10 Nachrichten als Verlauf laden
   const history = await prisma.chatMessage.findMany({
     where: { patientId: patient.id },
@@ -177,7 +201,7 @@ router.post('/:token/chat', async (req, res) => {
     const aiResponse = await anthropic.messages.create({
       model: 'claude-haiku-4-5',
       max_tokens: 512,
-      system: buildKaiPrompt(patient.practice.name, patient.name, exerciseNames),
+      system: buildKaiPrompt(patient.practice.name, patient.name, exerciseNames, adaptationsContext),
       messages,
     });
 
