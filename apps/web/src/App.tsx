@@ -6,6 +6,7 @@ import { RegisterPage } from './pages/RegisterPage.tsx';
 import { DashboardPage } from './pages/DashboardPage.tsx';
 import { PatientDetailPage } from './pages/PatientDetailPage.tsx';
 import { PatientPortalPage } from './pages/PatientPortalPage.tsx';
+import { ProgramBuilderPage } from './pages/ProgramBuilderPage.tsx';
 import { Spinner } from './components/ui/Spinner.tsx';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -26,6 +27,8 @@ function AppRoutes() {
       <Route path="/register" element={<PublicOnlyRoute><RegisterPage /></PublicOnlyRoute>} />
       <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/patients/:id" element={<ProtectedRoute><PatientDetailPage /></ProtectedRoute>} />
+      <Route path="/patients/:patientId/programs/new" element={<ProtectedRoute><ProgramBuilderPage mode="create" /></ProtectedRoute>} />
+      <Route path="/programs/:programId/edit" element={<ProtectedRoute><ProgramBuilderPage mode="edit" /></ProtectedRoute>} />
       <Route path="/p/:token" element={<PatientPortalPage />} />
       <Route path="*" element={<Placeholder title="404 — Seite nicht gefunden" />} />
     </Routes>
