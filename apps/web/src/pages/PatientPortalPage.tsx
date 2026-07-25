@@ -14,6 +14,12 @@ interface PortalExercise {
   bodyRegion: string;
   difficulty: number;
 }
+interface PortalAdaptation {
+  id: string;
+  labelDe: string;
+  instructionDe: string;
+  category: string;
+}
 interface PortalItem {
   id: string;
   order: number;
@@ -21,6 +27,8 @@ interface PortalItem {
   reps: number;
   holdSeconds?: number | null;
   frequencyPerWeek: number;
+  therapistNote?: string | null;
+  adaptations: PortalAdaptation[];
   exercise: PortalExercise;
 }
 interface PortalProgram {
@@ -170,6 +178,26 @@ function ProgramCard({ program, token }: { program: PortalProgram; token: string
                   </p>
                 )}
                 <ExerciseAvatar3D exerciseName={item.exercise.nameDe} />
+
+                {item.adaptations.length > 0 && (
+                  <div className="mt-3 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2.5">
+                    <p className="text-xs font-semibold text-blue-700 mb-1.5">Für dich angepasst</p>
+                    <ul className="flex flex-col gap-1.5">
+                      {item.adaptations.map((a) => (
+                        <li key={a.id} className="text-xs text-blue-900 leading-relaxed">
+                          <span className="font-medium">{a.labelDe}:</span> {a.instructionDe}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {item.therapistNote && (
+                  <div className="mt-2">
+                    <p className="text-xs font-semibold text-slate-500 mb-0.5">Anmerkung deiner Praxis</p>
+                    <p className="text-xs text-slate-600 italic leading-relaxed">{item.therapistNote}</p>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
