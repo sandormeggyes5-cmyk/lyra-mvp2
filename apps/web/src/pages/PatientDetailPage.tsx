@@ -110,6 +110,12 @@ export function PatientDetailPage() {
           <h2 className="text-base font-semibold text-slate-900">
             Übungsprogramme ({patient.programs.length})
           </h2>
+          <Link
+            to={`/patients/${id}/programs/new`}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+          >
+            + Neues Programm
+          </Link>
         </div>
         {patient.programs.length === 0 ? (
           <div className="text-center py-10 text-slate-400 text-sm bg-white rounded-xl border border-slate-200">
@@ -127,20 +133,47 @@ export function PatientDetailPage() {
                       {prog._count?.logs !== undefined && ` · ${prog._count.logs} Einheiten protokolliert`}
                     </p>
                   </div>
+                  <Link
+                    to={`/programs/${prog.id}/edit`}
+                    className="text-xs font-medium text-blue-700 hover:text-blue-800 flex-shrink-0"
+                  >
+                    Bearbeiten
+                  </Link>
                 </div>
                 {prog.notes && (
                   <p className="text-sm text-slate-600 mb-3 bg-slate-50 rounded-lg px-3 py-2">{prog.notes}</p>
                 )}
                 <ul className="divide-y divide-slate-100">
                   {prog.items.map((item) => (
-                    <li key={item.id} className="py-2 flex items-center justify-between text-sm">
-                      <span className="text-slate-700">{item.exercise.nameDe}</span>
-                      <span className="text-slate-400 tabular-nums">
-                        {item.sets}×{item.reps}
-                        {item.holdSeconds ? ` · ${item.holdSeconds}s` : ''}
-                        {' · '}
-                        {item.frequencyPerWeek}×/Woche
-                      </span>
+                    <li key={item.id} className="py-2.5 text-sm">
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-slate-700">{item.exercise.nameDe}</span>
+                        <span className="text-slate-400 tabular-nums flex-shrink-0">
+                          {item.sets}×{item.reps}
+                          {item.holdSeconds ? ` · ${item.holdSeconds}s` : ''}
+                          {' · '}
+                          {item.frequencyPerWeek}×/Woche
+                        </span>
+                      </div>
+                      {(item.adaptations.length > 0 || item.therapistNote) && (
+                        <div className="mt-1.5 flex flex-col gap-1">
+                          {item.adaptations.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {item.adaptations.map((a) => (
+                                <span
+                                  key={a.id}
+                                  className="inline-flex items-center rounded-full bg-green-50 text-green-700 text-xs px-2 py-0.5"
+                                >
+                                  {a.labelDe}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {item.therapistNote && (
+                            <p className="text-xs text-slate-500 italic">„{item.therapistNote}"</p>
+                          )}
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
