@@ -60,6 +60,39 @@ async function assertAdaptationsAreAssignable(
   }
 }
 
+const SETS_REPS_FREQUENCY_MIN = 1;
+const SETS_REPS_FREQUENCY_MAX = 100;
+const HOLD_SECONDS_MIN = 1;
+const HOLD_SECONDS_MAX = 600;
+const THERAPIST_NOTE_MAX_LENGTH = 1000;
+
+function isIntInRange(value: unknown, min: number, max: number): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
+}
+
+// Validiert die pro Übung gesetzten Mengen/Angaben, bevor irgendetwas
+// geschrieben wird. Gibt eine Fehlermeldung zurück oder null bei Erfolg.
+function validateProgramItems(items: ProgramItemInput[]): string | null {
+  for (const item of items) {
+    if (!isIntInRange(item.sets, SETS_REPS_FREQUENCY_MIN, SETS_REPS_FREQUENCY_MAX)) {
+      return `sets muss eine Ganzzahl zwischen ${SETS_REPS_FREQUENCY_MIN} und ${SETS_REPS_FREQUENCY_MAX} sein`;
+    }
+    if (!isIntInRange(item.reps, SETS_REPS_FREQUENCY_MIN, SETS_REPS_FREQUENCY_MAX)) {
+      return `reps muss eine Ganzzahl zwischen ${SETS_REPS_FREQUENCY_MIN} und ${SETS_REPS_FREQUENCY_MAX} sein`;
+    }
+    if (!isIntInRange(item.frequencyPerWeek, SETS_REPS_FREQUENCY_MIN, SETS_REPS_FREQUENCY_MAX)) {
+      return `frequencyPerWeek muss eine Ganzzahl zwischen ${SETS_REPS_FREQUENCY_MIN} und ${SETS_REPS_FREQUENCY_MAX} sein`;
+    }
+    if (item.holdSeconds != null && !isIntInRange(item.holdSeconds, HOLD_SECONDS_MIN, HOLD_SECONDS_MAX)) {
+      return `holdSeconds muss eine Ganzzahl zwischen ${HOLD_SECONDS_MIN} und ${HOLD_SECONDS_MAX} sein (oder leer)`;
+    }
+    if (item.therapistNote != null && item.therapistNote.length > THERAPIST_NOTE_MAX_LENGTH) {
+      return `therapistNote darf maximal ${THERAPIST_NOTE_MAX_LENGTH} Zeichen lang sein`;
+    }
+  }
+  return null;
+}
+
 function programExerciseCreateData(items: ProgramItemInput[]) {
   return items.map((item, idx) => ({
     exerciseId: item.exerciseId,
@@ -154,6 +187,12 @@ router.post('/', async (req: Request, res: Response) => {
     }
   }
 
+  const itemsError = validateProgramItems(items ?? []);
+  if (itemsError) {
+    res.status(400).json({ error: itemsError });
+    return;
+  }
+
   try {
     await assertAdaptationsAreAssignable(items ?? [], practiceId);
   } catch (err) {
@@ -231,6 +270,12 @@ router.put('/:id/items', async (req: Request, res: Response) => {
   const found = await prisma.exercise.findMany({ where: { id: { in: exerciseIds } } });
   if (found.length !== new Set(exerciseIds).size) {
     res.status(400).json({ error: 'Eine oder mehrere exerciseIds sind ungültig' });
+    return;
+  }
+
+  const itemsError = validateProgramItems(items);
+  if (itemsError) {
+    res.status(400).json({ error: itemsError });
     return;
   }
 
