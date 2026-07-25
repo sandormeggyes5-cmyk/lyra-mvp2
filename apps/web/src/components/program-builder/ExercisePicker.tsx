@@ -3,6 +3,7 @@ import { api } from '../../api/client.ts';
 import type { Exercise } from '../../types.ts';
 import { Button } from '../ui/Button.tsx';
 import { Spinner } from '../ui/Spinner.tsx';
+import { ExerciseAvatar3D } from '../ExerciseAvatar3D.tsx';
 
 interface Props {
   addedExerciseIds: string[];
@@ -72,20 +73,23 @@ export function ExercisePicker({ addedExerciseIds, onAdd }: Props) {
             return (
               <li
                 key={ex.id}
-                className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2"
+                className="rounded-lg border border-slate-200 px-3 py-2"
               >
-                <div>
-                  <p className="text-sm font-medium text-slate-800">{ex.nameDe}</p>
-                  <p className="text-xs text-slate-400">{ex.bodyRegion} · Schwierigkeit {ex.difficulty}</p>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-slate-800">{ex.nameDe}</p>
+                    <p className="text-xs text-slate-400">{ex.bodyRegion} · Schwierigkeit {ex.difficulty}</p>
+                  </div>
+                  <Button
+                    variant={added ? 'secondary' : 'primary'}
+                    disabled={added}
+                    onClick={() => onAdd(ex)}
+                    className="text-xs flex-shrink-0"
+                  >
+                    {added ? 'Hinzugefügt' : 'Hinzufügen'}
+                  </Button>
                 </div>
-                <Button
-                  variant={added ? 'secondary' : 'primary'}
-                  disabled={added}
-                  onClick={() => onAdd(ex)}
-                  className="text-xs flex-shrink-0"
-                >
-                  {added ? 'Hinzugefügt' : 'Hinzufügen'}
-                </Button>
+                <ExerciseAvatar3D exerciseName={ex.nameDe} />
               </li>
             );
           })}
