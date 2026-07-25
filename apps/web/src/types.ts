@@ -32,6 +32,17 @@ export interface Exercise {
   defaultHoldSeconds?: number | null;
 }
 
+export type AdaptationCategory = 'haltung' | 'koerperbau' | 'beweglichkeit' | 'hilfsmittel' | 'schonung';
+
+// Vom Therapeuten manuell ausgewählte Anpassung — nie automatisch zugewiesen.
+export interface ExerciseAdaptation {
+  id: string;
+  labelDe: string;
+  instructionDe: string;
+  category: AdaptationCategory;
+  isSystem: boolean;
+}
+
 export interface ProgramItem {
   id: string;
   order: number;
@@ -39,6 +50,8 @@ export interface ProgramItem {
   reps: number;
   holdSeconds?: number | null;
   frequencyPerWeek: number;
+  therapistNote?: string | null;
+  adaptations: ExerciseAdaptation[];
   exercise: Exercise;
 }
 
