@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../api/client.ts';
 import { useAuth } from '../contexts/AuthContext.tsx';
 import { Button } from '../components/ui/Button.tsx';
@@ -8,6 +8,8 @@ import { Input } from '../components/ui/Input.tsx';
 export function LoginPage() {
   const { refetch } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const sessionExpired = (location.state as { reason?: string } | null)?.reason === 'session-expired';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,6 +43,11 @@ export function LoginPage() {
           <p className="text-slate-500 text-sm mt-1">Therapeuten-Login</p>
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          {sessionExpired && (
+            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+              Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.
+            </p>
+          )}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <Input
               label="E-Mail"
