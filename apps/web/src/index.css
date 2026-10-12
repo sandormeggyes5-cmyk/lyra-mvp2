@@ -1,3 +1,24 @@
+/* Selbst gehostete Schriften (kein Google-Fonts-<link>-Tag in Produktion) */
+@import "@fontsource/fraunces/500.css";
+@import "@fontsource/fraunces/600.css";
+@import "@fontsource/geist-sans/400.css";
+@import "@fontsource/geist-sans/500.css";
+@import "@fontsource/geist-sans/600.css";
+@import "@fontsource/geist-mono/400.css";
+
+@import "./styles/tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-neutral-25 text-neutral-900 font-body;
+    touch-action: manipulation;
+  }
+}

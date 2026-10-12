@@ -188,7 +188,7 @@ export function ProgramBuilderPage({ mode }: Props) {
   if (loadError) {
     return (
       <AppLayout>
-        <div className="text-center py-16 text-slate-400">{loadError}</div>
+        <div className="text-center py-16 text-neutral-400">{loadError}</div>
       </AppLayout>
     );
   }
@@ -196,28 +196,28 @@ export function ProgramBuilderPage({ mode }: Props) {
   return (
     <AppLayout>
       <div className="mb-6">
-        <button onClick={handleBack} className="text-sm text-slate-500 hover:text-slate-700 inline-flex items-center gap-1">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <button onClick={handleBack} className="text-body-sm text-neutral-500 hover:text-neutral-700 inline-flex items-center gap-1">
+          <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
           Zurück zu {patientName || 'Patient'}
         </button>
       </div>
 
-      <h1 className="text-xl font-semibold text-slate-900 mb-6">
+      <h1 className="font-display text-headline text-neutral-900 mb-6">
         {mode === 'create' ? `Neues Programm für ${patientName}` : `Programm bearbeiten: ${patientName}`}
       </h1>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Linke Spalte: Übungsbibliothek */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <h2 className="text-sm font-semibold text-slate-700 mb-3">Übungsbibliothek</h2>
+        <div className="bg-white rounded-xl shadow-sm p-5">
+          <h2 className="text-body-sm font-semibold text-neutral-700 mb-3">Übungsbibliothek</h2>
           <ExercisePicker addedExerciseIds={items.map((i) => i.exerciseId)} onAdd={addExercise} />
         </div>
 
         {/* Rechte Spalte: Programm-Details */}
         <div className="flex flex-col gap-4">
-          <div className="bg-white rounded-xl border border-slate-200 p-5 flex flex-col gap-3">
+          <div className="bg-white rounded-xl shadow-sm p-5 flex flex-col gap-3">
             <Input
               label="Programmname"
               value={name}
@@ -226,18 +226,19 @@ export function ProgramBuilderPage({ mode }: Props) {
               required
             />
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-slate-700">Notiz (optional)</label>
+              <label htmlFor="program-notes" className="text-body-sm font-medium text-neutral-700">Notiz (optional)</label>
               <textarea
+                id="program-notes"
                 rows={2}
                 value={notes}
                 onChange={(e) => { setNotes(e.target.value); setDirty(true); }}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-body text-neutral-900 placeholder:text-neutral-400 outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
               />
             </div>
           </div>
 
           {items.length === 0 ? (
-            <div className="text-center py-10 text-slate-400 text-sm bg-white rounded-xl border border-slate-200">
+            <div className="text-center py-10 text-body-sm text-neutral-400 bg-white rounded-xl shadow-sm">
               Noch keine Übungen ausgewählt.
             </div>
           ) : (
@@ -253,7 +254,7 @@ export function ProgramBuilderPage({ mode }: Props) {
             </div>
           )}
 
-          {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+          {submitError && <p role="alert" aria-live="polite" className="text-body-sm text-danger">{submitError}</p>}
 
           <div className="flex gap-3 justify-end">
             <Button type="button" variant="secondary" onClick={handleBack}>Abbrechen</Button>

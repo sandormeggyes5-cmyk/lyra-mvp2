@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 
 const mockTx = {
@@ -56,6 +56,19 @@ const exerciseBridge = {
   defaultSets: 3,
   defaultReps: 12,
   defaultHoldSeconds: null,
+  isValidated: true,
+  exerciseType: 'Kräftigung',
+  position: 'Rückenlage',
+  equipment: [],
+};
+
+const adaptationHohlkreuz = {
+  id: 'adapt-hohlkreuz',
+  exerciseId: exerciseBridge.id,
+  labelDe: 'Hohlkreuz vermeiden',
+  isSystem: true,
+  practiceId: null,
+  isValidated: true,
 };
 
 function validItem(overrides: Record<string, unknown> = {}) {
@@ -158,5 +171,94 @@ describe('PUT /api/v1/programs/:id/items — Mengen-Validierung', () => {
       .send({ items: [validItem()] });
 
     expect(res.status).toBe(200);
+  });
+});
+
+// ── Fachliche Freigabe: unvalidierte Übungen/Anpassungen dürfen nicht ──────
+// verordnet werden, außer über den Dev-only Bypass (ALLOW_UNVALIDATED_EXERCISES).
+
+describe('Verordnung von fachlich nicht freigegebenen Übungen/Anpassungen', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('POST /api/v1/programs lehnt eine unvalidierte Übung ab', async () => {
+    vi.mocked(prisma.exercise.findMany).mockResolvedValue([{ ...exerciseBridge, isValidated: false }] as any);
+
+    const res = await request(app)
+      .post('/api/v1/programs')
+      .send({ patientId: 'patient-1', name: 'Testprogramm', items: [validItem()] });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/nicht freigegeben/);
+    expect(prisma.exerciseProgram.create).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/v1/programs erlaubt eine unvalidierte Übung mit aktivem Dev-Bypass', async () => {
+    vi.stubEnv('NODE_ENV', 'test');
+    vi.stubEnv('ALLOW_UNVALIDATED_EXERCISES', 'true');
+    vi.mocked(prisma.exercise.findMany).mockResolvedValue([{ ...exerciseBridge, isValidated: false }] as any);
+
+    const res = await request(app)
+      .post('/api/v1/programs')
+      .send({ patientId: 'patient-1', name: 'Testprogramm', items: [validItem()] });
+
+    expect(res.status).toBe(201);
+  });
+
+  it('POST /api/v1/programs ignoriert den Dev-Bypass in production', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('ALLOW_UNVALIDATED_EXERCISES', 'true');
+    vi.mocked(prisma.exercise.findMany).mockResolvedValue([{ ...exerciseBridge, isValidated: false }] as any);
+
+    const res = await request(app)
+      .post('/api/v1/programs')
+      .send({ patientId: 'patient-1', name: 'Testprogramm', items: [validItem()] });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('PUT /api/v1/programs/:id/items lehnt eine unvalidierte Übung ab', async () => {
+    vi.mocked(prisma.exercise.findMany).mockResolvedValue([{ ...exerciseBridge, isValidated: false }] as any);
+
+    const res = await request(app)
+      .put('/api/v1/programs/prog-1/items')
+      .send({ items: [validItem()] });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/nicht freigegeben/);
+    expect(mockTx.programExercise.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/v1/programs lehnt eine unvalidierte Anpassung ab', async () => {
+    vi.mocked(prisma.exerciseAdaptation.findMany).mockResolvedValue([
+      { ...adaptationHohlkreuz, isValidated: false },
+    ] as any);
+
+    const res = await request(app)
+      .post('/api/v1/programs')
+      .send({
+        patientId: 'patient-1',
+        name: 'Testprogramm',
+        items: [validItem({ adaptationIds: [adaptationHohlkreuz.id] })],
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/nicht freigegeben/);
+    expect(prisma.exerciseProgram.create).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/v1/programs akzeptiert eine validierte Anpassung', async () => {
+    vi.mocked(prisma.exerciseAdaptation.findMany).mockResolvedValue([adaptationHohlkreuz] as any);
+
+    const res = await request(app)
+      .post('/api/v1/programs')
+      .send({
+        patientId: 'patient-1',
+        name: 'Testprogramm',
+        items: [validItem({ adaptationIds: [adaptationHohlkreuz.id] })],
+      });
+
+    expect(res.status).toBe(201);
   });
 });

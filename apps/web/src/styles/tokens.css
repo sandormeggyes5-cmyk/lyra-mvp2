@@ -1,0 +1,135 @@
+/**
+ * Lyra Design Tokens
+ *
+ * Strukturell an DESIGN.md (Linear-Analyse) angelehnt — benanntes Token-
+ * System, 4px-Spacing-Basis, dieselbe Komponenten-Referenz-Logik.
+ * Markenidentität (Farben, Schrift, Radius, Schatten) ist eigenständig für
+ * Lyra entwickelt, nicht von Linear übernommen.
+ */
+
+:root {
+  /* ── Farben: Primär (warmes Teal) ───────────────────────────────── */
+  --color-primary-50: #eaf6f3;
+  --color-primary-100: #cfeae3;
+  --color-primary-200: #9fd5c8;
+  --color-primary-300: #6fbfac;
+  --color-primary-400: #3fa991;
+  --color-primary-500: #17947a;
+  --color-primary-600: #0f7c65; /* Hauptmarke, primäre Buttons/Links */
+  --color-primary-700: #0c6453;
+  --color-primary-800: #094c40;
+  --color-primary-900: #06332a;
+
+  /* ── Farben: Akzent (warmes Koralle — sparsam einsetzen) ────────── */
+  --color-accent-500: #e8834a;
+  --color-accent-600: #d6702f;
+  --color-accent-tint: #fdeee2; /* Hintergrund für Kai-Elemente, Hervorhebungen */
+
+  /* ── Farben: Neutral (warmgetönt, bewusst nicht Tailwind-Slate) ── */
+  --color-neutral-0: #fbfaf8; /* Seitenhintergrund */
+  --color-neutral-50: #f6f4f1;
+  --color-neutral-100: #efebe6;
+  --color-neutral-200: #e2dcd4;
+  --color-neutral-300: #cbc2b6;
+  --color-neutral-400: #a89d8e;
+  --color-neutral-500: #8a7f70;
+  --color-neutral-600: #6b6255;
+  --color-neutral-700: #4f483d;
+  --color-neutral-800: #332f28;
+  --color-neutral-900: #1d1a15; /* Haupttextfarbe */
+
+  /* ── Farben: Semantisch ──────────────────────────────────────────── */
+  --color-success: #2f9e5b;
+  --color-success-tint: #e8f6ee;
+  --color-warning: #d97f16;
+  --color-warning-tint: #fdf1e2;
+  --color-danger: #d14343;
+  --color-danger-tint: #fbeaea;
+
+  /* ── Typografie ──────────────────────────────────────────────────── */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Größe · Gewicht · Zeilenhöhe · Laufweite */
+  --text-display-lg-size: 48px;
+  --text-display-lg-weight: 600;
+  --text-display-lg-leading: 1.1;
+  --text-display-lg-tracking: -0.02em;
+
+  --text-display-md-size: 36px;
+  --text-display-md-weight: 600;
+  --text-display-md-leading: 1.15;
+  --text-display-md-tracking: -0.01em;
+
+  --text-headline-size: 24px;
+  --text-headline-weight: 600;
+  --text-headline-leading: 1.2;
+  --text-headline-tracking: -0.006em;
+
+  --text-subhead-size: 18px;
+  --text-subhead-weight: 500;
+  --text-subhead-leading: 1.4;
+
+  --text-body-size: 15px;
+  --text-body-weight: 400;
+  --text-body-leading: 1.5;
+
+  --text-body-sm-size: 13px;
+  --text-body-sm-weight: 400;
+  --text-body-sm-leading: 1.5;
+
+  --text-caption-size: 12px;
+  --text-caption-weight: 500;
+  --text-caption-leading: 1.4;
+  --text-caption-tracking: 0.02em;
+
+  --text-button-size: 14px;
+  --text-button-weight: 600;
+  --text-button-leading: 1.2;
+
+  --text-mono-size: 13px;
+  --text-mono-weight: 400;
+  --text-mono-leading: 1.5;
+
+  /* ── Spacing (4px-Basis, strukturell von DESIGN.md übernommen) ──── */
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
+  --space-section: 72px;
+
+  /* ── Radius (etwas weicher als Linear — zugänglicher, weniger Tool-artig) ── */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-xxl: 28px;
+  --radius-pill: 9999px;
+  --radius-full: 9999px;
+
+  /* ── Schatten (bewusster Bruch mit Linear — helles System braucht Elevation) ── */
+  --shadow-sm: 0 1px 2px rgba(29, 26, 21, 0.06);
+  --shadow-md: 0 2px 8px rgba(29, 26, 21, 0.08);
+  --shadow-lg: 0 8px 24px rgba(29, 26, 21, 0.1);
+  --shadow-focus-ring: 0 0 0 2px rgba(15, 124, 101, 0.4);
+
+  /* ── Motion ──────────────────────────────────────────────────────── */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-warm: cubic-bezier(0.34, 1.2, 0.64, 1); /* nur für Erfolgs-/Ermutigungs-Momente auf der Patientenseite */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

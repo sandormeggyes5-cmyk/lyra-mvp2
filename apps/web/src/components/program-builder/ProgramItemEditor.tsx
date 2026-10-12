@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import type { Exercise } from '../../types.ts';
 import { AdaptationPicker } from './AdaptationPicker.tsx';
 import { Button } from '../ui/Button.tsx';
@@ -31,6 +31,7 @@ interface Props {
 
 export function ProgramItemEditor({ item, onChange, onRemove }: Props) {
   const [adaptationsOpen, setAdaptationsOpen] = useState(false);
+  const noteId = useId();
 
   function update<K extends keyof BuilderItem>(key: K, value: BuilderItem[K]) {
     onChange({ ...item, [key]: value });
@@ -39,15 +40,15 @@ export function ProgramItemEditor({ item, onChange, onRemove }: Props) {
   const selectedCount = item.adaptationIds.length;
 
   return (
-    <div className="rounded-xl border border-slate-200 p-4 flex flex-col gap-3">
+    <div className="rounded-lg border border-neutral-200 p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-medium text-slate-900">{item.exercise.nameDe}</p>
-          <p className="text-xs text-slate-400">
+          <p className="font-medium text-neutral-900">{item.exercise.nameDe}</p>
+          <p className="text-xs text-neutral-400">
             {item.exercise.bodyRegion} · Schwierigkeit {item.exercise.difficulty}
           </p>
         </div>
-        <Button variant="ghost" onClick={onRemove} className="text-xs text-red-600 hover:bg-red-50">
+        <Button variant="ghost" onClick={onRemove} className="text-xs text-danger hover:bg-danger-tint">
           Entfernen
         </Button>
       </div>
@@ -85,16 +86,17 @@ export function ProgramItemEditor({ item, onChange, onRemove }: Props) {
       </div>
 
       <div>
-        <label className="text-sm font-medium text-slate-700 block mb-1">Eigene Anmerkung (optional)</label>
+        <label htmlFor={noteId} className="text-sm font-medium text-neutral-700 block mb-1">Eigene Anmerkung (optional)</label>
         <textarea
+          id={noteId}
           rows={2}
           value={item.therapistNote}
           maxLength={THERAPIST_NOTE_MAX_LENGTH}
           onChange={(e) => update('therapistNote', e.target.value)}
           placeholder="z. B. Hinweise zur Ausführung für diesen Patienten"
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-body text-neutral-900 placeholder:text-neutral-400 outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
         />
-        <p className="text-xs text-slate-400 mt-0.5 text-right">
+        <p className="text-xs text-neutral-400 mt-0.5 text-right">
           {item.therapistNote.length}/{THERAPIST_NOTE_MAX_LENGTH}
         </p>
       </div>
@@ -103,9 +105,11 @@ export function ProgramItemEditor({ item, onChange, onRemove }: Props) {
         <button
           type="button"
           onClick={() => setAdaptationsOpen((v) => !v)}
-          className="flex items-center gap-1.5 text-sm font-medium text-blue-700"
+          aria-expanded={adaptationsOpen}
+          className="flex items-center gap-1.5 text-sm font-medium text-primary-700"
         >
           <svg
+            aria-hidden="true"
             className={`h-4 w-4 transition-transform ${adaptationsOpen ? 'rotate-90' : ''}`}
             fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
           >
@@ -113,7 +117,7 @@ export function ProgramItemEditor({ item, onChange, onRemove }: Props) {
           </svg>
           Anpassungen für diesen Patienten
           {selectedCount > 0 && (
-            <span className="text-xs font-normal text-slate-400">({selectedCount} ausgewählt)</span>
+            <span className="text-xs font-normal text-neutral-400">({selectedCount} ausgewählt)</span>
           )}
         </button>
         {adaptationsOpen && (
@@ -153,6 +157,7 @@ function NumberField({
   onCommit: (value: number | null) => void;
 }) {
   const [text, setText] = useState(value == null ? '' : String(value));
+  const id = useId();
 
   useEffect(() => {
     setText(value == null ? '' : String(value));
@@ -175,16 +180,18 @@ function NumberField({
 
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-slate-600">{label}</label>
+      <label htmlFor={id} className="text-xs font-medium text-neutral-600">{label}</label>
       <input
+        id={id}
         type="number"
+        inputMode="numeric"
         min={min}
         max={max}
         value={text}
         placeholder={optional ? '—' : undefined}
         onChange={(e) => setText(e.target.value)}
         onBlur={commit}
-        className="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="w-full rounded-md border border-neutral-300 px-2.5 py-1.5 text-body-sm text-neutral-900 outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
       />
     </div>
   );

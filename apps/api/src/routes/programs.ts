@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, type AuthRequest } from '../middleware/requireAuth.js';
+import { unvalidatedExercisesAllowed } from '../lib/featureFlags.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -39,9 +40,10 @@ async function assertAdaptationsAreAssignable(
 
   const found = await prisma.exerciseAdaptation.findMany({
     where: { id: { in: allIds } },
-    select: { id: true, exerciseId: true, isSystem: true, practiceId: true },
+    select: { id: true, exerciseId: true, isSystem: true, practiceId: true, isValidated: true, labelDe: true },
   });
   const byId = new Map(found.map(a => [a.id, a]));
+  const skipValidationCheck = unvalidatedExercisesAllowed();
 
   for (const item of items) {
     for (const adaptationId of item.adaptationIds ?? []) {
@@ -56,7 +58,24 @@ async function assertAdaptationsAreAssignable(
       if (!belongsToTenant) {
         throw new Error(`Anpassung ${adaptationId} gehört nicht zu dieser Praxis`);
       }
+      if (!skipValidationCheck && !adaptation.isValidated) {
+        throw new Error(`Anpassung "${adaptation.labelDe}" ist fachlich noch nicht freigegeben und kann nicht zugewiesen werden`);
+      }
     }
+  }
+}
+
+// Wirft einen Error, wenn eine der übergebenen Übungen fachlich noch nicht
+// freigegeben ist (isValidated: false) — außer der Dev-Bypass ist aktiv.
+function assertExercisesAreValidated(exercises: { nameDe: string; isValidated: boolean }[]): void {
+  if (unvalidatedExercisesAllowed()) return;
+  const unvalidated = exercises.filter(e => !e.isValidated);
+  if (unvalidated.length > 0) {
+    throw new Error(
+      `Folgende Übungen sind fachlich noch nicht freigegeben und können nicht verordnet werden: ${unvalidated
+        .map(e => e.nameDe)
+        .join(', ')}`,
+    );
   }
 }
 
@@ -185,6 +204,12 @@ router.post('/', async (req: Request, res: Response) => {
       res.status(400).json({ error: 'Eine oder mehrere exerciseIds sind ungültig' });
       return;
     }
+    try {
+      assertExercisesAreValidated(found);
+    } catch (err) {
+      res.status(400).json({ error: (err as Error).message });
+      return;
+    }
   }
 
   const itemsError = validateProgramItems(items ?? []);
@@ -270,6 +295,12 @@ router.put('/:id/items', async (req: Request, res: Response) => {
   const found = await prisma.exercise.findMany({ where: { id: { in: exerciseIds } } });
   if (found.length !== new Set(exerciseIds).size) {
     res.status(400).json({ error: 'Eine oder mehrere exerciseIds sind ungültig' });
+    return;
+  }
+  try {
+    assertExercisesAreValidated(found);
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
     return;
   }
 

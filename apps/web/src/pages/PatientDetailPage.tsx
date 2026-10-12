@@ -51,18 +51,22 @@ export function PatientDetailPage() {
   if (loading) return <AppLayout><Spinner /></AppLayout>;
   if (error || !patient) return (
     <AppLayout>
-      <div className="text-center py-16 text-slate-400">{error || 'Patient nicht gefunden.'}</div>
+      <div className="text-center py-16 text-neutral-400">{error || 'Patient nicht gefunden.'}</div>
     </AppLayout>
   );
 
   const expiresAt = patient.magicLinkExpiresAt ? new Date(patient.magicLinkExpiresAt) : null;
   const isExpired = expiresAt ? expiresAt < new Date() : false;
+  // Kurzform statt der vollen, ~90 Zeichen langen URL — die Kopier-Funktion
+  // nutzt weiterhin patient.magicLink vollständig.
+  const linkTail = patient.magicLink ? patient.magicLink.replace(/^https?:\/\//, '').split('/p/')[1] : '';
+  const linkShort = linkTail ? `…/p/${linkTail.slice(0, 10)}…${linkTail.slice(-6)}` : '';
 
   return (
     <AppLayout>
       <div className="mb-6">
-        <Link to="/" className="text-sm text-slate-500 hover:text-slate-700 inline-flex items-center gap-1">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <Link to="/" className="text-body-sm text-neutral-500 hover:text-neutral-700 inline-flex items-center gap-1">
+          <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
           Alle Patienten
@@ -70,9 +74,9 @@ export function PatientDetailPage() {
       </div>
 
       {/* Patient info */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
-        <h1 className="text-xl font-semibold text-slate-900 mb-1">{patient.name}</h1>
-        <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-slate-500">
+      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <h1 className="font-display text-headline text-neutral-900 mb-1">{patient.name}</h1>
+        <div className="flex flex-wrap gap-x-6 gap-y-1 text-body-sm text-neutral-500">
           {patient.emailOrPhone && <span>{patient.emailOrPhone}</span>}
           {patient.dateOfBirth && (
             <span>geb. {new Date(patient.dateOfBirth).toLocaleDateString('de-DE')}</span>
@@ -82,12 +86,12 @@ export function PatientDetailPage() {
       </div>
 
       {/* Magic link card */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
         <div className="flex items-start justify-between gap-4 mb-3">
           <div>
-            <h2 className="text-sm font-semibold text-slate-700">Portal-Link</h2>
+            <h2 className="text-body-sm font-semibold text-neutral-700">Portal-Link</h2>
             {expiresAt && (
-              <p className={`text-xs mt-0.5 ${isExpired ? 'text-red-500' : 'text-slate-400'}`}>
+              <p className={`text-xs mt-0.5 ${isExpired ? 'text-danger' : 'text-neutral-400'}`}>
                 {isExpired ? 'Abgelaufen' : `Gültig bis ${expiresAt.toLocaleDateString('de-DE')}`}
               </p>
             )}
@@ -96,59 +100,64 @@ export function PatientDetailPage() {
             Erneuern
           </Button>
         </div>
-        <div className="bg-slate-50 rounded-lg border border-slate-200 px-4 py-3 break-all text-xs text-slate-700 font-mono mb-3">
-          {patient.magicLink}
+        <div className="flex items-center gap-2 bg-neutral-50 rounded-md border border-neutral-200 px-4 py-3 mb-3">
+          <span className="text-body-sm text-neutral-700 font-mono truncate flex-1" title={patient.magicLink}>
+            {linkShort}
+          </span>
+          <button
+            onClick={copyLink}
+            className="flex-shrink-0 text-body-sm font-medium text-primary-600 hover:text-primary-700 transition-colors duration-base"
+          >
+            {copied ? 'Kopiert!' : 'Kopieren'}
+          </button>
         </div>
-        <Button variant="secondary" onClick={copyLink} className="w-full justify-center">
-          {copied ? 'Kopiert!' : 'Link kopieren'}
-        </Button>
       </div>
 
       {/* Programs */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold text-slate-900">
+          <h2 className="font-display text-headline text-neutral-900">
             Übungsprogramme ({patient.programs.length})
           </h2>
           <Link
             to={`/patients/${id}/programs/new`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-button font-body bg-primary-600 text-white hover:bg-primary-700 transition-colors duration-base"
           >
             + Neues Programm
           </Link>
         </div>
         {patient.programs.length === 0 ? (
-          <div className="text-center py-10 text-slate-400 text-sm bg-white rounded-xl border border-slate-200">
+          <div className="text-center py-10 text-body-sm text-neutral-400 bg-white rounded-xl shadow-sm">
             Noch kein Programm vorhanden.
           </div>
         ) : (
           <div className="flex flex-col gap-3">
             {patient.programs.map((prog) => (
-              <div key={prog.id} className="bg-white rounded-xl border border-slate-200 p-5">
+              <div key={prog.id} className="bg-white rounded-xl shadow-sm p-5">
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div>
-                    <h3 className="font-medium text-slate-900">{prog.name}</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <h3 className="font-medium text-body text-neutral-900">{prog.name}</h3>
+                    <p className="text-xs text-neutral-400 mt-0.5">
                       Erstellt: {new Date(prog.createdAt).toLocaleDateString('de-DE')} · {prog.items.length} Übung{prog.items.length !== 1 ? 'en' : ''}
                       {prog._count?.logs !== undefined && ` · ${prog._count.logs} Einheiten protokolliert`}
                     </p>
                   </div>
                   <Link
                     to={`/programs/${prog.id}/edit`}
-                    className="text-xs font-medium text-blue-700 hover:text-blue-800 flex-shrink-0"
+                    className="text-xs font-medium text-primary-700 hover:text-primary-800 flex-shrink-0"
                   >
                     Bearbeiten
                   </Link>
                 </div>
                 {prog.notes && (
-                  <p className="text-sm text-slate-600 mb-3 bg-slate-50 rounded-lg px-3 py-2">{prog.notes}</p>
+                  <p className="text-body-sm text-neutral-600 mb-3 bg-neutral-50 rounded-md px-3 py-2">{prog.notes}</p>
                 )}
-                <ul className="divide-y divide-slate-100">
+                <ul className="divide-y divide-neutral-100">
                   {prog.items.map((item) => (
-                    <li key={item.id} className="py-2.5 text-sm">
+                    <li key={item.id} className="py-2.5 text-body-sm">
                       <div className="flex items-center justify-between gap-4">
-                        <span className="text-slate-700">{item.exercise.nameDe}</span>
-                        <span className="text-slate-400 tabular-nums flex-shrink-0">
+                        <span className="text-neutral-700">{item.exercise.nameDe}</span>
+                        <span className="text-neutral-400 tabular-nums flex-shrink-0">
                           {item.sets}×{item.reps}
                           {item.holdSeconds ? ` · ${item.holdSeconds}s` : ''}
                           {' · '}
@@ -162,7 +171,7 @@ export function PatientDetailPage() {
                               {item.adaptations.map((a) => (
                                 <span
                                   key={a.id}
-                                  className="inline-flex items-center rounded-full bg-green-50 text-green-700 text-xs px-2 py-0.5"
+                                  className="inline-flex items-center rounded-full bg-success-tint text-success text-xs px-2 py-0.5"
                                 >
                                   {a.labelDe}
                                 </span>
@@ -170,7 +179,7 @@ export function PatientDetailPage() {
                             </div>
                           )}
                           {item.therapistNote && (
-                            <p className="text-xs text-slate-500 italic">„{item.therapistNote}"</p>
+                            <p className="text-xs text-neutral-500 italic">„{item.therapistNote}“</p>
                           )}
                         </div>
                       )}

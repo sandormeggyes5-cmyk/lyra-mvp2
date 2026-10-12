@@ -4,6 +4,7 @@ import { api, ApiError } from '../api/client.ts';
 import { useAuth } from '../contexts/AuthContext.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Input } from '../components/ui/Input.tsx';
+import { Wordmark } from '../components/ui/Wordmark.tsx';
 
 export function RegisterPage() {
   const { refetch } = useAuth();
@@ -36,17 +37,18 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-blue-600">PhysioPilot</h1>
-          <p className="text-slate-500 text-sm mt-1">Neue Praxis registrieren</p>
+          <Wordmark className="justify-center" />
+          <p className="text-body-sm text-neutral-500 mt-2">Neue Praxis registrieren</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl shadow-md p-6">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <Input
               label="Praxisname"
               type="text"
+              name="organization"
               autoComplete="organization"
               required
               placeholder="z. B. Physiotherapie Müller"
@@ -56,6 +58,7 @@ export function RegisterPage() {
             <Input
               label="Ihr Name"
               type="text"
+              name="name"
               autoComplete="name"
               required
               placeholder="Vor- und Nachname"
@@ -65,7 +68,9 @@ export function RegisterPage() {
             <Input
               label="E-Mail"
               type="email"
+              name="email"
               autoComplete="email"
+              spellCheck={false}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -73,22 +78,24 @@ export function RegisterPage() {
             <Input
               label="Passwort"
               type="password"
+              name="new-password"
               autoComplete="new-password"
+              spellCheck={false}
               required
               minLength={8}
               placeholder="Mindestens 8 Zeichen"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p role="alert" aria-live="polite" className="text-body-sm text-danger">{error}</p>}
             <Button type="submit" loading={loading} className="w-full justify-center mt-1">
               Praxis registrieren
             </Button>
           </form>
         </div>
-        <p className="text-center text-sm text-slate-500 mt-4">
+        <p className="text-center text-body-sm text-neutral-500 mt-4">
           Bereits registriert?{' '}
-          <Link to="/login" className="text-blue-600 hover:underline font-medium">
+          <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
             Anmelden
           </Link>
         </p>

@@ -4,6 +4,7 @@ import { api, ApiError } from '../api/client.ts';
 import { useAuth } from '../contexts/AuthContext.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Input } from '../components/ui/Input.tsx';
+import { Wordmark } from '../components/ui/Wordmark.tsx';
 
 export function LoginPage() {
   const { refetch } = useAuth();
@@ -36,15 +37,15 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-blue-600">PhysioPilot</h1>
-          <p className="text-slate-500 text-sm mt-1">Therapeuten-Login</p>
+          <Wordmark className="justify-center" />
+          <p className="text-body-sm text-neutral-500 mt-2">Therapeuten-Login</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl shadow-md p-6">
           {sessionExpired && (
-            <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+            <p className="text-body-sm text-warning bg-warning-tint rounded-md px-3 py-2 mb-4">
               Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.
             </p>
           )}
@@ -52,7 +53,9 @@ export function LoginPage() {
             <Input
               label="E-Mail"
               type="email"
+              name="email"
               autoComplete="email"
+              spellCheck={false}
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -60,20 +63,22 @@ export function LoginPage() {
             <Input
               label="Passwort"
               type="password"
+              name="password"
               autoComplete="current-password"
+              spellCheck={false}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p role="alert" aria-live="polite" className="text-body-sm text-danger">{error}</p>}
             <Button type="submit" loading={loading} className="w-full justify-center mt-1">
               Anmelden
             </Button>
           </form>
         </div>
-        <p className="text-center text-sm text-slate-500 mt-4">
+        <p className="text-center text-body-sm text-neutral-500 mt-4">
           Noch kein Konto?{' '}
-          <Link to="/register" className="text-blue-600 hover:underline font-medium">
+          <Link to="/register" className="text-primary-600 hover:text-primary-700 font-medium">
             Praxis registrieren
           </Link>
         </p>

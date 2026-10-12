@@ -13,6 +13,7 @@
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "db:seed:adaptations": "tsx prisma/seed-adaptations.ts",
+    "db:backfill-taxonomy": "tsx prisma/backfill-taxonomy.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },

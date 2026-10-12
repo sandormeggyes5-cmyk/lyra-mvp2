@@ -14,7 +14,7 @@ class CanvasErrorBoundary extends Component<{ children: ReactNode }, { error: st
           <p className="text-sm font-medium text-slate-600">3D-Modell konnte nicht geladen werden</p>
           <p className="text-xs text-slate-400">
             Lade die Datei erneut von Mixamo herunter:<br />
-            Format <strong>FBX · With Skin · 30fps</strong>, gleicher Charakter für alle Übungen.
+            Format <strong>FBX · With Skin · 30fps</strong>, pro Übung ein gerigter Charakter je Körpertyp-Variante.
           </p>
         </div>
       );
@@ -26,37 +26,58 @@ class CanvasErrorBoundary extends Component<{ children: ReactNode }, { error: st
 // ── Typ-Definitionen ──────────────────────────────────────────────────────────
 type ExerciseKey = 'push-up' | 'jogging' | 'circle-crunch';
 
+// Körpertyp-Variante desselben Bewegungsablaufs — z. B. dieselbe Kniebeuge,
+// aber mit einer älteren oder vollschlankeren Figur demonstriert. Erzeugung
+// via MakeHuman (Regler für Alter/Gewicht) → Export FBX → Mixamo-Auto-Rigger
+// → bestehende Animation darauf anwenden → Export. 'standard' ist immer die
+// Mindest-Variante; weitere sind optional pro Übung.
+type BodyType = 'standard' | 'senior' | 'plus-size';
+
+const BODY_TYPE_LABELS: Record<BodyType, string> = {
+  standard: 'Standard',
+  senior: 'Ältere Person',
+  'plus-size': 'Größerer Körperbau',
+};
+
+const BODY_TYPE_ORDER: BodyType[] = ['standard', 'senior', 'plus-size'];
+
 interface ExerciseConfig {
-  file: string;
   label: string;
   cameraPos: [number, number, number];
   cameraTarget: [number, number, number];
   tips: string[];
+  // Pfad pro verfügbarer Körpertyp-Variante. Fehlt eine Variante für eine
+  // Übung, wird 'standard' als Fallback verwendet (siehe resolveAvatarPath).
+  variants: Partial<Record<BodyType, string>>;
 }
 
 const EXERCISES: Record<ExerciseKey, ExerciseConfig> = {
   'push-up': {
-    file: '/avatars/push-up.fbx',
     label: 'Liegestütze',
     cameraPos: [180, 80, 120],
     cameraTarget: [0, 60, 0],
     tips: ['Körper gerade wie ein Brett halten', 'Ellbogen nah am Körper führen', 'Bauch die ganze Zeit aktiv halten'],
+    variants: { standard: '/avatars/push-up.fbx' },
   },
   'jogging': {
-    file: '/avatars/jogging.fbx',
     label: 'Joggen',
     cameraPos: [150, 140, 180],
     cameraTarget: [0, 80, 0],
     tips: ['Aufrecht laufen, Blick nach vorne', 'Arme locker im 90°-Winkel schwingen', 'Weiche Landung mit dem Mittelfuß'],
+    variants: { standard: '/avatars/jogging.fbx' },
   },
   'circle-crunch': {
-    file: '/avatars/circle-crunch.fbx',
     label: 'Core-Übung',
     cameraPos: [180, 100, 130],
     cameraTarget: [0, 50, 0],
     tips: ['Lendenwirbel am Boden halten', 'Bewegung aus dem Bauch, nicht dem Schwung', 'Gleichmäßig atmen, nicht pressen'],
+    variants: { standard: '/avatars/circle-crunch.fbx' },
   },
 };
+
+function resolveAvatarPath(config: ExerciseConfig, bodyType: BodyType): string {
+  return config.variants[bodyType] ?? config.variants.standard!;
+}
 
 // ── 3D-Modell mit Animation ───────────────────────────────────────────────────
 function AvatarModel({ path }: { path: string }) {
@@ -142,12 +163,12 @@ function Environment() {
 }
 
 // ── 3D-Szene ──────────────────────────────────────────────────────────────────
-function Scene({ config }: { config: ExerciseConfig }) {
+function Scene({ config, avatarPath }: { config: ExerciseConfig; avatarPath: string }) {
   return (
     <>
       <Environment />
       <Suspense fallback={<LoadingMesh />}>
-        <AvatarModel path={config.file} />
+        <AvatarModel path={avatarPath} />
       </Suspense>
       <OrbitControls
         enablePan={false}
@@ -167,20 +188,32 @@ interface Props {
   exerciseName: string;
 }
 
+// Exakte Zuordnung statt Schlüsselwort-Raten: mit wachsendem Übungskatalog
+// (aktuell 83) würde Substring-Matching zunehmend Fehltreffer produzieren.
+// Neue Avatare ergänzen: Zeile hier + Eintrag in EXERCISES, keine Logik-Änderung nötig.
+const EXERCISE_NAME_TO_KEY: Record<string, ExerciseKey> = {
+  'Liegestütze': 'push-up',
+  'Joggen': 'jogging',
+  'Planke': 'circle-crunch',
+};
+
 function getExerciseKey(name: string): ExerciseKey | null {
-  const n = name.toLowerCase();
-  if (n.includes('liegestütz') || n.includes('push')) return 'push-up';
-  if (n.includes('jogg') || n.includes('joggen') || n.includes('laufen')) return 'jogging';
-  if (n.includes('plank') || n.includes('crunch') || n.includes('core')) return 'circle-crunch';
-  return null;
+  return EXERCISE_NAME_TO_KEY[name] ?? null;
 }
 
 export function ExerciseAvatar3D({ exerciseName }: Props) {
   const [open, setOpen] = useState(false);
+  // Bewusst lokaler, manuell gesetzter State — kein Ableiten aus
+  // Patientenmerkmalen (Alter, o.ä.). Gleiches Prinzip wie bei den
+  // Übungs-Anpassungen (AdaptationPicker.tsx): die Auswahl ist immer eine
+  // explizite Handlung, niemals eine automatische Zuordnung.
+  const [bodyType, setBodyType] = useState<BodyType>('standard');
   const key = getExerciseKey(exerciseName);
   if (!key) return null;
 
   const config = EXERCISES[key];
+  const availableBodyTypes = BODY_TYPE_ORDER.filter((bt) => config.variants[bt]);
+  const avatarPath = resolveAvatarPath(config, bodyType);
 
   return (
     <div className="mt-2">
@@ -196,6 +229,25 @@ export function ExerciseAvatar3D({ exerciseName }: Props) {
 
       {open && (
         <div className="mt-3 rounded-xl overflow-hidden border border-blue-100 bg-blue-50">
+          {availableBodyTypes.length > 1 && (
+            <div className="flex gap-1.5 px-3 pt-3">
+              {availableBodyTypes.map((bt) => (
+                <button
+                  key={bt}
+                  type="button"
+                  onClick={() => setBodyType(bt)}
+                  className={`text-[11px] font-medium px-2 py-1 rounded-full transition-colors ${
+                    bodyType === bt
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-blue-700 border border-blue-200 hover:bg-blue-100'
+                  }`}
+                >
+                  {BODY_TYPE_LABELS[bt]}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* 3D Canvas */}
           <div style={{ height: 320 }}>
             <CanvasErrorBoundary>
@@ -204,7 +256,7 @@ export function ExerciseAvatar3D({ exerciseName }: Props) {
                 camera={{ position: config.cameraPos, fov: 45, near: 1, far: 2000 }}
                 gl={{ antialias: true, preserveDrawingBuffer: false }}
               >
-                <Scene config={config} />
+                <Scene config={config} avatarPath={avatarPath} />
               </Canvas>
             </CanvasErrorBoundary>
           </div>

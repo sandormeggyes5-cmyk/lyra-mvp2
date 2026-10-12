@@ -3,10 +3,10 @@ import type { ButtonHTMLAttributes } from 'react';
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
 const styles: Record<Variant, string> = {
-  primary:   'bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500',
-  secondary: 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 focus-visible:ring-slate-400',
-  danger:    'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500',
-  ghost:     'text-slate-600 hover:bg-slate-100 focus-visible:ring-slate-400',
+  primary:   'bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-500',
+  secondary: 'bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50 focus-visible:ring-neutral-400',
+  danger:    'bg-danger text-white hover:bg-[#b63838] focus-visible:ring-danger',
+  ghost:     'text-neutral-600 hover:bg-neutral-100 focus-visible:ring-neutral-400',
 };
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -20,8 +20,9 @@ export function Button({ variant = 'primary', loading, children, className = '',
       {...props}
       disabled={disabled || loading}
       className={`
-        inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-        transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+        inline-flex items-center gap-2 px-4 py-2 rounded-md text-button font-body
+        transition-colors duration-base ease-standard
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
         disabled:opacity-50 disabled:cursor-not-allowed
         ${styles[variant]} ${className}
       `}

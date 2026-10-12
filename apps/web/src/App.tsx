@@ -7,12 +7,23 @@ import { DashboardPage } from './pages/DashboardPage.tsx';
 import { PatientDetailPage } from './pages/PatientDetailPage.tsx';
 import { PatientPortalPage } from './pages/PatientPortalPage.tsx';
 import { ProgramBuilderPage } from './pages/ProgramBuilderPage.tsx';
+import { ExerciseLibraryPage } from './pages/ExerciseLibraryPage.tsx';
 import { Spinner } from './components/ui/Spinner.tsx';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner className="py-0" /></div>;
   if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+// Nur für die Admin-Rolle — Freigabe fachlicher Inhalte ist Admin-Aufgabe
+// (siehe docs/TASK_VALIDATION_UI.md).
+function AdminRoute({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner className="py-0" /></div>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== 'admin') return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -32,6 +43,7 @@ function AppRoutes() {
       <Route path="/patients/:id" element={<ProtectedRoute><PatientDetailPage /></ProtectedRoute>} />
       <Route path="/patients/:patientId/programs/new" element={<ProtectedRoute><ProgramBuilderPage mode="create" /></ProtectedRoute>} />
       <Route path="/programs/:programId/edit" element={<ProtectedRoute><ProgramBuilderPage mode="edit" /></ProtectedRoute>} />
+      <Route path="/exercises" element={<AdminRoute><ExerciseLibraryPage /></AdminRoute>} />
       <Route path="/p/:token" element={<PatientPortalPage />} />
       <Route path="*" element={<Placeholder title="404 — Seite nicht gefunden" />} />
     </Routes>

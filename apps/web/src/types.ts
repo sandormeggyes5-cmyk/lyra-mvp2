@@ -30,6 +30,15 @@ export interface Exercise {
   defaultSets: number;
   defaultReps: number;
   defaultHoldSeconds?: number | null;
+  // Fachliche Freigabe: solange false, kann die Übung nicht verordnet werden
+  // (serverseitig durchgesetzt in programs.ts).
+  isValidated: boolean;
+  validatedBy?: string | null;
+  validatedAt?: string | null;
+  sourceNote?: string | null;
+  exerciseType: string;
+  position: string;
+  equipment: string[];
 }
 
 export type AdaptationCategory = 'haltung' | 'koerperbau' | 'beweglichkeit' | 'hilfsmittel' | 'schonung';
@@ -37,10 +46,16 @@ export type AdaptationCategory = 'haltung' | 'koerperbau' | 'beweglichkeit' | 'h
 // Vom Therapeuten manuell ausgewählte Anpassung — nie automatisch zugewiesen.
 export interface ExerciseAdaptation {
   id: string;
+  exerciseId: string;
   labelDe: string;
   instructionDe: string;
   category: AdaptationCategory;
   isSystem: boolean;
+  // Fachliche Freigabe: solange false, kann die Anpassung nicht zugewiesen
+  // werden (serverseitig durchgesetzt in programs.ts).
+  isValidated: boolean;
+  validatedBy?: string | null;
+  validatedAt?: string | null;
 }
 
 export interface ProgramItem {

@@ -72,6 +72,19 @@ model Exercise {
   programItems       ProgramExercise[]
   sessionLogs        SessionLog[]
   adaptations        ExerciseAdaptation[]
+
+  // ── Fachliche Freigabe ──────────────────────────────────────────────────
+  // Solange isValidated = false, darf die Übung laut programs.ts NICHT
+  // verordnet werden (siehe unvalidatedExercisesAllowed() in lib/featureFlags.ts).
+  isValidated Boolean   @default(false)
+  validatedBy String? // Name + Qualifikation der prüfenden Person
+  validatedAt DateTime?
+  sourceNote  String? // Herkunft: "LLM-Entwurf", "Praxis X", "Fachliteratur"
+
+  // ── Taxonomie ────────────────────────────────────────────────────────────
+  exerciseType String // "Mobilisation" | "Kräftigung" | "Dehnung" | "Stabilisation" | "Koordination" | "Atmung"
+  position     String // "Rückenlage" | "Bauchlage" | "Seitlage" | "Vierfüßler" | "Sitz" | "Stand"
+  equipment    String[] @default([]) // "ohne" | "Theraband" | "Ball" | "Stuhl" | "Wand" | "Matte"
 }
 
 model ExerciseProgram {
@@ -139,6 +152,14 @@ model ExerciseAdaptation {
   createdAt DateTime @default(now())
 
   selections ProgramExerciseAdaptation[]
+
+  // ── Fachliche Freigabe ──────────────────────────────────────────────────
+  // Solange isValidated = false, darf die Anpassung laut programs.ts NICHT
+  // einem Patienten zugewiesen werden (assertAdaptationsAreAssignable()).
+  isValidated Boolean   @default(false)
+  validatedBy String?
+  validatedAt DateTime?
+  sourceNote  String?
 }
 
 // Verknüpfungstabelle: welche Anpassung hat der Therapeut für diese

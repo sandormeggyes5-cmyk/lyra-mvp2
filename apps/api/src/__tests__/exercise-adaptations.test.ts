@@ -58,6 +58,10 @@ const exerciseBridge = {
   defaultSets: 3,
   defaultReps: 12,
   defaultHoldSeconds: null,
+  isValidated: true,
+  exerciseType: 'Kräftigung',
+  position: 'Rückenlage',
+  equipment: [],
 };
 
 beforeEach(() => {
@@ -103,7 +107,7 @@ describe('POST /api/v1/programs — Mandantentrennung bei ExerciseAdaptation (mi
 
   it('erlaubt eine System-Anpassung (isSystem: true, keine Praxis)', async () => {
     vi.mocked(prisma.exerciseAdaptation.findMany).mockResolvedValue([
-      { id: 'adapt-system', exerciseId: exerciseBridge.id, isSystem: true, practiceId: null },
+      { id: 'adapt-system', exerciseId: exerciseBridge.id, isSystem: true, practiceId: null, isValidated: true },
     ] as any);
     vi.mocked(prisma.exerciseProgram.create).mockResolvedValue({ id: 'prog-1', items: [] } as any);
 
@@ -135,7 +139,7 @@ describe('POST /api/v1/programs — Mandantentrennung bei ExerciseAdaptation (mi
 
   it('erlaubt eine praxiseigene Anpassung der eigenen Praxis (isSystem: false, practiceId = eigene Praxis)', async () => {
     vi.mocked(prisma.exerciseAdaptation.findMany).mockResolvedValue([
-      { id: 'adapt-own', exerciseId: exerciseBridge.id, isSystem: false, practiceId: PRACTICE_A },
+      { id: 'adapt-own', exerciseId: exerciseBridge.id, isSystem: false, practiceId: PRACTICE_A, isValidated: true },
     ] as any);
     vi.mocked(prisma.exerciseProgram.create).mockResolvedValue({ id: 'prog-1', items: [] } as any);
 
@@ -209,6 +213,7 @@ describe('GET /api/v1/exercises/:id — Mandantentrennung bei verfügbaren Anpas
         where: {
           exerciseId: exerciseBridge.id,
           OR: [{ isSystem: true }, { practiceId: PRACTICE_A }],
+          isValidated: true,
         },
       }),
     );
