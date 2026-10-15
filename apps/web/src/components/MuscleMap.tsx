@@ -37,7 +37,7 @@ const REGION_SHAPES: Record<RegionId, RegionShape> = {
   'front-abs': { kind: 'rect', x: 78, y: 110, width: 44, height: 50, rx: 3 },
   'front-hipflexor': { kind: 'rect', x: 66, y: 162, width: 68, height: 18, rx: 3 },
   'front-quad': { kind: 'polygon', points: [[66, 184], [92, 184], [88, 296], [70, 296]] },
-  'front-adductor': { kind: 'polygon', points: [[92, 190], [108, 190], [104, 286], [96, 286]] },
+  'front-adductor': { kind: 'polygon', points: [[92, 190], [100, 190], [97, 284], [89, 284]] },
   'front-shin': { kind: 'polygon', points: [[68, 302], [88, 302], [84, 356], [70, 356]] },
   'front-foot': { kind: 'polygon', points: [[58, 360], [96, 360], [100, 376], [54, 376]] },
   'back-neck': { kind: 'rect', x: 86, y: 42, width: 28, height: 12, rx: 2 },
@@ -53,7 +53,7 @@ const REGION_SHAPES: Record<RegionId, RegionShape> = {
 // Regionen, die paarweise links/rechts vorkommen (Spiegelung an MIRROR_AXIS).
 // Alle übrigen Regionen sind zentrale Einzelformen (z.B. Bauch, Rücken, Gesäß).
 const PAIRED_REGIONS = new Set<RegionId>([
-  'front-shoulder', 'front-quad', 'front-shin', 'front-foot',
+  'front-shoulder', 'front-quad', 'front-adductor', 'front-shin', 'front-foot',
   'back-shoulder', 'back-triceps', 'back-hamstring', 'back-calf',
 ]);
 
