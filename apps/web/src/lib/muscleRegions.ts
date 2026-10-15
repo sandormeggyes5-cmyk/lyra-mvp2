@@ -1,6 +1,10 @@
 // Mapping von den rohen `muscleGroups`-Bezeichnungen aus der Übungsdatenbank
-// (apps/api/prisma/schema.prisma, Model Exercise) zu den ~17 visuellen
-// Körperregionen der <MuscleMap>-Komponente (vorne/hinten).
+// (apps/api/prisma/schema.prisma, Model Exercise) zu den 18 visuellen
+// Körperregionen der <MuscleMap>-Komponente (vorne/hinten). Die Regionen
+// entsprechen den Slugs des übernommenen Asset (siehe
+// apps/web/src/assets/musclemap/, THIRD_PARTY_LICENSES.md) — kein eigenes
+// Hüftbeuger-Feld im Asset (Näherung auf Quadrizeps), dafür feinere
+// Bauch- (abs/obliques) und Rücken-Trennung (upper-/lower-back) als zuvor.
 //
 // Herkunft der Rohbezeichnungen: `SELECT DISTINCT unnest("muscleGroups")
 // FROM "Exercise"` gegen die lokale Dev-DB (83 Übungen, Stand 2026-10).
@@ -15,7 +19,7 @@ export type RegionId =
   | 'front-shoulder'
   | 'front-chest'
   | 'front-abs'
-  | 'front-hipflexor'
+  | 'front-obliques'
   | 'front-quad'
   | 'front-adductor'
   | 'front-shin'
@@ -26,6 +30,7 @@ export type RegionId =
   | 'back-shoulder'
   | 'back-triceps'
   | 'back-upperback'
+  | 'back-lowerback'
   | 'back-glutes'
   | 'back-hamstring'
   | 'back-calf';
@@ -37,7 +42,7 @@ export const MUSCLE_REGIONS: Record<RegionId, { labelDe: string; view: MuscleMap
   'front-shoulder': { labelDe: 'Schulter (vorne)', view: 'front' },
   'front-chest': { labelDe: 'Brust', view: 'front' },
   'front-abs': { labelDe: 'Bauch', view: 'front' },
-  'front-hipflexor': { labelDe: 'Hüftbeuger', view: 'front' },
+  'front-obliques': { labelDe: 'Seitliche Bauchmuskeln', view: 'front' },
   'front-quad': { labelDe: 'Quadrizeps', view: 'front' },
   'front-adductor': { labelDe: 'Adduktoren', view: 'front' },
   'front-shin': { labelDe: 'Schienbein', view: 'front' },
@@ -46,7 +51,8 @@ export const MUSCLE_REGIONS: Record<RegionId, { labelDe: string; view: MuscleMap
   'back-trapezius': { labelDe: 'Trapezius', view: 'back' },
   'back-shoulder': { labelDe: 'Schulter (hinten) / Rotatorenmanschette', view: 'back' },
   'back-triceps': { labelDe: 'Oberarm (hinten)', view: 'back' },
-  'back-upperback': { labelDe: 'Rücken', view: 'back' },
+  'back-upperback': { labelDe: 'Oberer Rücken', view: 'back' },
+  'back-lowerback': { labelDe: 'Unterer Rücken', view: 'back' },
   'back-glutes': { labelDe: 'Gesäß', view: 'back' },
   'back-hamstring': { labelDe: 'Oberschenkel (hinten)', view: 'back' },
   'back-calf': { labelDe: 'Wade', view: 'back' },
@@ -66,12 +72,14 @@ export const MUSCLE_TO_REGIONS: Record<string, RegionId[]> = {
   'Pectoralis major': ['front-chest'],
   'Rectus abdominis': ['front-abs'],
   'Bauchmuskeln': ['front-abs'],
-  'Obliquus externus': ['front-abs'],
-  'Obliquus internus': ['front-abs'],
-  'Oblique': ['front-abs'],
   'Transversus abdominis': ['front-abs'],
-  'Iliopsoas': ['front-hipflexor'],
-  'Hüftbeuger': ['front-hipflexor'],
+  'Obliquus externus': ['front-obliques'],
+  'Obliquus internus': ['front-obliques'],
+  'Oblique': ['front-obliques'],
+  // Kein eigenes Hüftbeuger-Feld im neuen Asset — Näherung auf Quadrizeps
+  // (anatomisch angrenzend), siehe Freigabe.
+  'Iliopsoas': ['front-quad'],
+  'Hüftbeuger': ['front-quad'],
   'Quadrizeps': ['front-quad'],
   'Rectus femoris': ['front-quad'],
   'Vastus medialis (VMO)': ['front-quad'],
@@ -88,6 +96,8 @@ export const MUSCLE_TO_REGIONS: Record<string, RegionId[]> = {
   'Oberer Trapezius': ['back-trapezius'],
   'Mittlerer Trapezius': ['back-trapezius'],
   'Unterer Trapezius': ['back-trapezius'],
+  // Kein eigenes Rotatorenmanschetten-Feld im neuen Asset — Näherung auf die
+  // hintere Schulter/Deltoideus-Region, siehe Freigabe.
   'Rotatorenmanschette': ['back-shoulder'],
   'Infraspinatus': ['back-shoulder'],
   'Supraspinatus': ['back-shoulder'],
@@ -98,14 +108,16 @@ export const MUSCLE_TO_REGIONS: Record<string, RegionId[]> = {
   'Latissimus dorsi': ['back-upperback'],
   'Rhomboidei': ['back-upperback'],
   'Serratus anterior': ['back-upperback'],
-  'Erector spinae': ['back-upperback'],
-  'Rückenstrecker': ['back-upperback'],
   'Brustwirbelsäulen-Extensoren': ['back-upperback'],
   'Brustwirbelsäulen-Rotatoren': ['back-upperback'],
-  'Multifidus': ['back-upperback'],
-  'Quadratus lumborum': ['back-upperback'],
-  'Lendenwirbelsäule': ['back-upperback'],
-  'Rumpfstabilisatoren': ['front-abs', 'back-upperback'],
+  'Quadratus lumborum': ['back-lowerback'],
+  'Lendenwirbelsäule': ['back-lowerback'],
+  // Spannt die gesamte Wirbelsäule — Asset trennt nur oberen/unteren Rücken,
+  // daher beide Regionen statt einer erfundenen Einzelzuordnung.
+  'Erector spinae': ['back-upperback', 'back-lowerback'],
+  'Rückenstrecker': ['back-upperback', 'back-lowerback'],
+  'Multifidus': ['back-upperback', 'back-lowerback'],
+  'Rumpfstabilisatoren': ['front-abs', 'back-upperback', 'back-lowerback'],
   'Gluteus': ['back-glutes'],
   'Gluteus maximus': ['back-glutes'],
   'Gluteus medius': ['back-glutes'],
