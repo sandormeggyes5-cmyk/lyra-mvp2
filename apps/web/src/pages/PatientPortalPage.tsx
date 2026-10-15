@@ -4,6 +4,7 @@ import { Spinner } from '../components/ui/Spinner.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Modal } from '../components/ui/Modal.tsx';
 import { ExerciseAvatar3D } from '../components/ExerciseAvatar3D.tsx';
+import { MuscleMap } from '../components/MuscleMap.tsx';
 
 // --- Typen ---
 interface PortalExercise {
@@ -12,6 +13,7 @@ interface PortalExercise {
   descriptionDe: string;
   videoUrl?: string | null;
   bodyRegion: string;
+  muscleGroups: string[];
   difficulty: number;
 }
 interface PortalAdaptation {
@@ -180,6 +182,7 @@ function ProgramCard({ program, token }: { program: PortalProgram; token: string
                   </p>
                 )}
                 <ExerciseAvatar3D exerciseName={item.exercise.nameDe} />
+                <MuscleMap mode="display" muscles={item.exercise.muscleGroups} className="mt-3" />
 
                 {item.adaptations.length > 0 && (
                   <div className="mt-3 bg-primary-50 border border-primary-100 rounded-lg px-3 py-2.5">

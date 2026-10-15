@@ -87,6 +87,7 @@ router.get('/:token', async (req, res) => {
           videoUrl: i.exercise.videoUrl,
           thumbnailUrl: i.exercise.thumbnailUrl,
           bodyRegion: i.exercise.bodyRegion,
+          muscleGroups: i.exercise.muscleGroups,
           difficulty: i.exercise.difficulty,
         },
       })),
