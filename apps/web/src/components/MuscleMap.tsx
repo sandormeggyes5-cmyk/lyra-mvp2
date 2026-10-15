@@ -12,71 +12,106 @@ interface Props {
   className?: string;
 }
 
-// Stilisierte, geometrisch einfache Körper-Silhouette mit klickbaren/
-// hervorhebbaren Zonen — bewusst keine anatomisch exakten Muskelpfade
-// (kein Medizinprodukt, siehe Plan). viewBox gemeinsam für beide Ansichten.
+// Stilisierte, proportionale Körper-Silhouette mit klickbaren/hervorhebbaren
+// Zonen — bewusst keine anatomisch exakten Muskelpfade (kein Medizinprodukt,
+// siehe Plan), aber eckige, auf Körperproportionen abgestimmte Polygone statt
+// Ellipsen/stark gerundeter Formen. viewBox gemeinsam für beide Ansichten.
+// Die Silhouette (Kopf/Rumpf/Arme/Beine/Füße) ist für vorne/hinten identisch
+// — nur die klickbaren Regionen unterscheiden sich pro Ansicht.
 const VIEW_BOX = '0 0 200 400';
+const MIRROR_AXIS = 100;
+
+type Point = [number, number];
 
 type RegionShape =
-  | { kind: 'ellipse'; cx: number; cy: number; rx: number; ry: number }
+  | { kind: 'polygon'; points: Point[] }
   | { kind: 'rect'; x: number; y: number; width: number; height: number; rx: number };
 
+// Linke/zentrale Form je Region. Für paarige Regionen (siehe PAIRED_REGIONS)
+// wird die rechte Seite durch Spiegelung an MIRROR_AXIS erzeugt, nicht
+// doppelt erfasst.
 const REGION_SHAPES: Record<RegionId, RegionShape> = {
-  'front-neck': { kind: 'ellipse', cx: 100, cy: 58, rx: 14, ry: 10 },
-  'front-shoulder': { kind: 'ellipse', cx: 60, cy: 85, rx: 18, ry: 14 },
-  'front-chest': { kind: 'ellipse', cx: 100, cy: 110, rx: 32, ry: 22 },
-  'front-abs': { kind: 'rect', x: 75, y: 134, width: 50, height: 44, rx: 10 },
-  'front-hipflexor': { kind: 'ellipse', cx: 100, cy: 190, rx: 36, ry: 13 },
-  'front-quad': { kind: 'ellipse', cx: 70, cy: 232, rx: 18, ry: 42 },
-  'front-adductor': { kind: 'ellipse', cx: 100, cy: 235, rx: 11, ry: 38 },
-  'front-shin': { kind: 'ellipse', cx: 72, cy: 305, rx: 12, ry: 36 },
-  'front-foot': { kind: 'ellipse', cx: 72, cy: 352, rx: 15, ry: 10 },
-  'back-neck': { kind: 'ellipse', cx: 100, cy: 58, rx: 14, ry: 10 },
-  'back-trapezius': { kind: 'ellipse', cx: 100, cy: 85, rx: 30, ry: 18 },
-  'back-shoulder': { kind: 'ellipse', cx: 50, cy: 92, rx: 15, ry: 13 },
-  'back-triceps': { kind: 'ellipse', cx: 38, cy: 132, rx: 12, ry: 32 },
-  'back-upperback': { kind: 'rect', x: 72, y: 108, width: 56, height: 76, rx: 14 },
-  'back-glutes': { kind: 'ellipse', cx: 100, cy: 202, rx: 38, ry: 22 },
-  'back-hamstring': { kind: 'ellipse', cx: 72, cy: 252, rx: 18, ry: 38 },
-  'back-calf': { kind: 'ellipse', cx: 72, cy: 322, rx: 14, ry: 32 },
+  'front-neck': { kind: 'rect', x: 86, y: 42, width: 28, height: 12, rx: 2 },
+  'front-shoulder': { kind: 'rect', x: 46, y: 56, width: 22, height: 18, rx: 2 },
+  'front-chest': { kind: 'polygon', points: [[68, 66], [132, 66], [124, 108], [76, 108]] },
+  'front-abs': { kind: 'rect', x: 78, y: 110, width: 44, height: 50, rx: 3 },
+  'front-hipflexor': { kind: 'rect', x: 66, y: 162, width: 68, height: 18, rx: 3 },
+  'front-quad': { kind: 'polygon', points: [[66, 184], [92, 184], [88, 296], [70, 296]] },
+  'front-adductor': { kind: 'polygon', points: [[92, 190], [108, 190], [104, 286], [96, 286]] },
+  'front-shin': { kind: 'polygon', points: [[68, 302], [88, 302], [84, 356], [70, 356]] },
+  'front-foot': { kind: 'polygon', points: [[58, 360], [96, 360], [100, 376], [54, 376]] },
+  'back-neck': { kind: 'rect', x: 86, y: 42, width: 28, height: 12, rx: 2 },
+  'back-trapezius': { kind: 'polygon', points: [[62, 54], [138, 54], [122, 104], [78, 104]] },
+  'back-shoulder': { kind: 'rect', x: 44, y: 58, width: 20, height: 16, rx: 2 },
+  'back-triceps': { kind: 'polygon', points: [[34, 68], [55, 68], [50, 168], [28, 168]] },
+  'back-upperback': { kind: 'rect', x: 74, y: 106, width: 52, height: 76, rx: 3 },
+  'back-glutes': { kind: 'rect', x: 66, y: 182, width: 68, height: 34, rx: 4 },
+  'back-hamstring': { kind: 'polygon', points: [[64, 218], [96, 218], [92, 300], [68, 300]] },
+  'back-calf': { kind: 'polygon', points: [[68, 302], [92, 302], [86, 356], [72, 356]] },
 };
 
-// Spiegelbild der linken Körperhälfte für die rechte Seite (Schultern,
-// Oberarme, Oberschenkel, Unterschenkel, Füße kommen paarweise vor).
-const MIRRORED_X: Partial<Record<RegionId, number>> = {
-  'front-shoulder': 140,
-  'front-quad': 130,
-  'front-shin': 128,
-  'front-foot': 128,
-  'back-shoulder': 150,
-  'back-triceps': 162,
-  'back-hamstring': 128,
-  'back-calf': 128,
-};
+// Regionen, die paarweise links/rechts vorkommen (Spiegelung an MIRROR_AXIS).
+// Alle übrigen Regionen sind zentrale Einzelformen (z.B. Bauch, Rücken, Gesäß).
+const PAIRED_REGIONS = new Set<RegionId>([
+  'front-shoulder', 'front-quad', 'front-shin', 'front-foot',
+  'back-shoulder', 'back-triceps', 'back-hamstring', 'back-calf',
+]);
 
-function renderShape(shape: RegionShape, cxOverride: number | undefined, props: React.SVGAttributes<SVGElement>) {
-  if (shape.kind === 'ellipse') {
-    return <ellipse cx={cxOverride ?? shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} {...props} />;
-  }
-  const dx = cxOverride !== undefined ? cxOverride - shape.x - shape.width / 2 : 0;
-  return <rect x={shape.x + dx} y={shape.y} width={shape.width} height={shape.height} rx={shape.rx} {...props} />;
+function mirrorX(x: number): number {
+  return 2 * MIRROR_AXIS - x;
 }
 
-function BodySilhouette({ view }: { view: MuscleMapView }) {
+function mirrorShape(shape: RegionShape): RegionShape {
+  if (shape.kind === 'polygon') {
+    return { kind: 'polygon', points: shape.points.map(([x, y]) => [mirrorX(x), y]) };
+  }
+  return { ...shape, x: mirrorX(shape.x + shape.width) };
+}
+
+function shapeCenter(shape: RegionShape): Point {
+  if (shape.kind === 'rect') return [shape.x + shape.width / 2, shape.y + shape.height / 2];
+  const n = shape.points.length;
+  const cx = shape.points.reduce((sum, [x]) => sum + x, 0) / n;
+  const cy = shape.points.reduce((sum, [, y]) => sum + y, 0) / n;
+  return [cx, cy];
+}
+
+function RegionElement({ shape, ...props }: { shape: RegionShape } & React.SVGAttributes<SVGElement>) {
+  if (shape.kind === 'polygon') {
+    return <polygon points={shape.points.map(([x, y]) => `${x},${y}`).join(' ')} {...props} />;
+  }
+  return <rect x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx={shape.rx} {...props} />;
+}
+
+// Dekorative, nicht anklickbare Grundsilhouette — identisch für Vorder- und
+// Rückansicht. Eckige Polygone statt Ellipsen/stark gerundeter Formen, an
+// groben menschlichen Proportionen ausgerichtet (Schultern breiter als
+// Taille, Taille schmaler als Hüfte, verjüngte Gliedmaßen).
+function BodySilhouette() {
+  const silhouetteProps = { className: 'fill-neutral-100 stroke-neutral-300', strokeWidth: 1.5 };
   return (
     <g aria-hidden="true">
-      <circle cx={100} cy={30} r={20} className="fill-neutral-100 stroke-neutral-300" strokeWidth={1.5} />
-      <rect x={62} y={66} width={76} height={128} rx={24} className="fill-neutral-100 stroke-neutral-300" strokeWidth={1.5} />
-      <rect x={50} y={190} width={24} height={110} rx={12} className="fill-neutral-100 stroke-neutral-300" strokeWidth={1.5} />
-      <rect x={126} y={190} width={24} height={110} rx={12} className="fill-neutral-100 stroke-neutral-300" strokeWidth={1.5} />
-      {view === 'back' && (
-        <>
-          <rect x={30} y={100} width={18} height={70} rx={9} className="fill-neutral-100 stroke-neutral-300" strokeWidth={1.5} />
-          <rect x={152} y={100} width={18} height={70} rx={9} className="fill-neutral-100 stroke-neutral-300" strokeWidth={1.5} />
-        </>
-      )}
+      <circle cx={100} cy={26} r={18} {...silhouetteProps} />
+      <rect x={88} y={40} width={24} height={14} rx={2} {...silhouetteProps} />
+      <polygon points="56,52 144,52 128,140 138,180 62,180 72,140" {...silhouetteProps} />
+      <polygon points="54,58 34,66 26,170 22,256 40,256 46,170 56,70" {...silhouetteProps} />
+      <polygon points={mirrorPolygonString('54,58 34,66 26,170 22,256 40,256 46,170 56,70')} {...silhouetteProps} />
+      <polygon points="64,182 96,182 90,360 66,360" {...silhouetteProps} />
+      <polygon points={mirrorPolygonString('64,182 96,182 90,360 66,360')} {...silhouetteProps} />
+      <polygon points="58,360 96,360 100,378 54,378" {...silhouetteProps} />
+      <polygon points={mirrorPolygonString('58,360 96,360 100,378 54,378')} {...silhouetteProps} />
     </g>
   );
+}
+
+function mirrorPolygonString(points: string): string {
+  return points
+    .split(' ')
+    .map((pair) => {
+      const [x, y] = pair.split(',').map(Number);
+      return `${mirrorX(x)},${y}`;
+    })
+    .join(' ');
 }
 
 export function MuscleMap({ mode, muscles, activeRegion, onRegionSelect, className = '' }: Props) {
@@ -118,12 +153,14 @@ export function MuscleMap({ mode, muscles, activeRegion, onRegionSelect, classNa
       </div>
 
       <svg viewBox={VIEW_BOX} className="h-56 w-auto mx-auto" role="img" aria-label={`Körperkarte, ${view === 'front' ? 'Vorderseite' : 'Rückseite'}`}>
-        <BodySilhouette view={view} />
+        <BodySilhouette />
         {regionsForView.map((id) => {
           const shape = REGION_SHAPES[id];
           const isActive = highlighted.has(id);
           const label = MUSCLE_REGIONS[id].labelDe;
-          const isSecondarySide = id in MIRRORED_X;
+          const isPaired = PAIRED_REGIONS.has(id);
+          const [cx, cy] = shapeCenter(shape);
+
           const common = {
             className: `transition-colors ${
               isActive ? 'fill-primary-500 stroke-primary-700' : 'fill-neutral-200 stroke-neutral-300 hover:fill-neutral-300'
@@ -139,13 +176,17 @@ export function MuscleMap({ mode, muscles, activeRegion, onRegionSelect, classNa
 
           return (
             <g key={id}>
-              {renderShape(shape, undefined, common)}
-              {isActive && shape.kind === 'ellipse' && (
-                <circle cx={shape.cx} cy={shape.cy} r={3} className="fill-white" aria-hidden="true" />
-              )}
-              {isSecondarySide && renderShape(shape, MIRRORED_X[id], { ...common, 'aria-label': `${label} (rechts)${isActive ? ' (ausgewählt)' : ''}` })}
-              {isSecondarySide && isActive && shape.kind === 'ellipse' && (
-                <circle cx={MIRRORED_X[id]} cy={shape.cy} r={3} className="fill-white" aria-hidden="true" />
+              <RegionElement shape={shape} {...common} />
+              {isActive && <circle cx={cx} cy={cy} r={3} className="fill-white" aria-hidden="true" />}
+              {isPaired && (
+                <>
+                  <RegionElement
+                    shape={mirrorShape(shape)}
+                    {...common}
+                    aria-label={`${label} (rechts)${isActive ? ' (ausgewählt)' : ''}`}
+                  />
+                  {isActive && <circle cx={mirrorX(cx)} cy={cy} r={3} className="fill-white" aria-hidden="true" />}
+                </>
               )}
             </g>
           );
