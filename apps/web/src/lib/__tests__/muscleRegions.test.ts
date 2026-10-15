@@ -58,6 +58,14 @@ describe('muscleRegions — Vollständigkeit des Mappings', () => {
       expect(regions.length).toBeGreaterThan(0);
     }
   });
+
+  it('hat 18 Regionen (9 vorne + 9 hinten) — front-hipflexor entfernt, front-obliques + back-lowerback neu', () => {
+    const ids = Object.keys(MUSCLE_REGIONS);
+    expect(ids).toHaveLength(18);
+    expect(ids).not.toContain('front-hipflexor');
+    expect(ids).toContain('front-obliques');
+    expect(ids).toContain('back-lowerback');
+  });
 });
 
 describe('regionsForMuscle / regionsForMuscles', () => {
@@ -70,10 +78,11 @@ describe('regionsForMuscle / regionsForMuscles', () => {
     expect(regionsForMuscle('Komplett unbekannt')).toEqual([]);
   });
 
-  it('"Rumpfstabilisatoren" ist bewusst zwei Regionen zugeordnet (Bauch + Rücken)', () => {
+  it('"Rumpfstabilisatoren" ist bewusst drei Regionen zugeordnet (Bauch + oberer + unterer Rücken)', () => {
     expect(regionsForMuscle('Rumpfstabilisatoren')).toEqual(
-      expect.arrayContaining(['front-abs', 'back-upperback']),
+      expect.arrayContaining(['front-abs', 'back-upperback', 'back-lowerback']),
     );
+    expect(regionsForMuscle('Rumpfstabilisatoren')).toHaveLength(3);
   });
 
   it('regionsForMuscles dedupliziert über mehrere Muskeln hinweg', () => {
@@ -81,6 +90,33 @@ describe('regionsForMuscle / regionsForMuscles', () => {
     expect(regions).toContain('back-glutes');
     expect(regions).toContain('back-hamstring');
     expect(regions.filter((r) => r === 'back-glutes')).toHaveLength(1);
+  });
+
+  // ── Änderungen durch die feinere Asset-Granularität (MuscleMap v2) ──────
+
+  it('Iliopsoas/Hüftbeuger sind jetzt front-quad zugeordnet (kein Hüftbeuger-Feld im Asset)', () => {
+    expect(regionsForMuscle('Iliopsoas')).toEqual(['front-quad']);
+    expect(regionsForMuscle('Hüftbeuger')).toEqual(['front-quad']);
+  });
+
+  it('Obliquus externus/internus und Oblique sind front-obliques, nicht mehr front-abs', () => {
+    expect(regionsForMuscle('Obliquus externus')).toEqual(['front-obliques']);
+    expect(regionsForMuscle('Obliquus internus')).toEqual(['front-obliques']);
+    expect(regionsForMuscle('Oblique')).toEqual(['front-obliques']);
+  });
+
+  it('Quadratus lumborum/Lendenwirbelsäule sind back-lowerback, nicht mehr back-upperback', () => {
+    expect(regionsForMuscle('Quadratus lumborum')).toEqual(['back-lowerback']);
+    expect(regionsForMuscle('Lendenwirbelsäule')).toEqual(['back-lowerback']);
+  });
+
+  it('Erector spinae/Rückenstrecker/Multifidus spannen beide Rücken-Regionen', () => {
+    for (const muscle of ['Erector spinae', 'Rückenstrecker', 'Multifidus']) {
+      expect(regionsForMuscle(muscle)).toEqual(
+        expect.arrayContaining(['back-upperback', 'back-lowerback']),
+      );
+      expect(regionsForMuscle(muscle)).toHaveLength(2);
+    }
   });
 });
 
