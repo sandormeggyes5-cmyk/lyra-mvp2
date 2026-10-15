@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../api/client.ts';
 import type { Exercise } from '../../types.ts';
 import { Button } from '../ui/Button.tsx';
 import { Spinner } from '../ui/Spinner.tsx';
 import { ExerciseAvatar3D } from '../ExerciseAvatar3D.tsx';
+import { MuscleMap } from '../MuscleMap.tsx';
+import { muscleGroupsMatchRegion, type RegionId } from '../../lib/muscleRegions.ts';
 
 interface Props {
   addedExerciseIds: string[];
@@ -34,6 +36,7 @@ export function ExercisePicker({ addedExerciseIds, onAdd }: Props) {
   const [bodyRegion, setBodyRegion] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [includeUnvalidated, setIncludeUnvalidated] = useState(false);
+  const [activeRegion, setActiveRegion] = useState<RegionId | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -56,8 +59,18 @@ export function ExercisePicker({ addedExerciseIds, onAdd }: Props) {
       .finally(() => setLoading(false));
   }, [bodyRegion, difficulty, includeUnvalidated]);
 
+  // Clientseitiger Filter nach Muskelregion — kombinierbar mit den
+  // serverseitigen Filtern oben, keine Backend-Änderung nötig (Exercise ist
+  // eine praxisübergreifende, geteilte Bibliothek ohne practiceId).
+  const visibleExercises = useMemo(() => {
+    if (!activeRegion) return exercises;
+    return exercises.filter((ex) => muscleGroupsMatchRegion(ex.muscleGroups, activeRegion));
+  }, [exercises, activeRegion]);
+
   return (
     <div className="flex flex-col gap-3">
+      <MuscleMap mode="interactive" activeRegion={activeRegion} onRegionSelect={setActiveRegion} />
+
       <div className="flex flex-wrap items-center gap-2">
         <Select aria-label="Körperregion filtern" value={bodyRegion} onChange={(e) => setBodyRegion(e.target.value)}>
           <option value="">Alle Körperregionen</option>
@@ -87,7 +100,7 @@ export function ExercisePicker({ addedExerciseIds, onAdd }: Props) {
 
       {!loading && !error && (
         <ul className="flex flex-col gap-1.5 max-h-96 overflow-y-auto">
-          {exercises.map((ex) => {
+          {visibleExercises.map((ex) => {
             const added = addedExerciseIds.includes(ex.id);
             return (
               <li
@@ -138,6 +151,11 @@ export function ExercisePicker({ addedExerciseIds, onAdd }: Props) {
           )}
           {exercises.length === 0 && includeUnvalidated && (
             <li className="text-body-sm text-neutral-400 text-center py-6">Keine Übungen gefunden.</li>
+          )}
+          {exercises.length > 0 && visibleExercises.length === 0 && (
+            <li className="text-body-sm text-neutral-400 text-center py-6">
+              Keine Übungen für diese Muskelregion.
+            </li>
           )}
         </ul>
       )}
