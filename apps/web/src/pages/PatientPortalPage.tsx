@@ -3,8 +3,28 @@ import { useParams } from 'react-router-dom';
 import { Spinner } from '../components/ui/Spinner.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Modal } from '../components/ui/Modal.tsx';
-import { ExerciseAvatar3D } from '../components/ExerciseAvatar3D.tsx';
+import { ExerciseAvatar3D, type BodyType } from '../components/ExerciseAvatar3D.tsx';
 import { MuscleMap } from '../components/MuscleMap.tsx';
+
+// Prototyp (siehe Plan "3D-Avatar-Varianten — Prototyp Kniebeuge"): eine
+// bereits vom Therapeuten zugewiesene ExerciseAdaptation kann eine
+// passende Körperbau-/Haltungsvariante der 3D-Demo vorauswählen — keine
+// automatische Ableitung aus Patientenmerkmalen, nur eine Konsequenz einer
+// bereits getroffenen, expliziten Entscheidung. Bleibt in der 3D-Ansicht
+// manuell überschreibbar (siehe ExerciseAvatar3D.tsx `preferredVariant`).
+const ADAPTATION_LABEL_TO_VARIANT: Record<string, BodyType> = {
+  'Körperbau: schlanker': 'schlank',
+  'Körperbau: kräftiger': 'kraeftig',
+  'Haltung: Hohlkreuz': 'hohlkreuz',
+};
+
+function preferredAvatarVariant(adaptations: { labelDe: string }[]): BodyType | undefined {
+  for (const a of adaptations) {
+    const variant = ADAPTATION_LABEL_TO_VARIANT[a.labelDe];
+    if (variant) return variant;
+  }
+  return undefined;
+}
 
 // --- Typen ---
 interface PortalExercise {
@@ -181,7 +201,7 @@ function ProgramCard({ program, token }: { program: PortalProgram; token: string
                     {item.exercise.descriptionDe}
                   </p>
                 )}
-                <ExerciseAvatar3D exerciseName={item.exercise.nameDe} />
+                <ExerciseAvatar3D exerciseName={item.exercise.nameDe} preferredVariant={preferredAvatarVariant(item.adaptations)} />
                 <MuscleMap mode="display" muscles={item.exercise.muscleGroups} className="mt-3" />
 
                 {item.adaptations.length > 0 && (
