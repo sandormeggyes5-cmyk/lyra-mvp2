@@ -3,8 +3,9 @@
 // Körperregionen der <MuscleMap>-Komponente (vorne/hinten). Die Regionen
 // entsprechen den Slugs des übernommenen Asset (siehe
 // apps/web/src/assets/musclemap/, THIRD_PARTY_LICENSES.md) — kein eigenes
-// Hüftbeuger-Feld im Asset (Näherung auf Quadrizeps), dafür feinere
-// Bauch- (abs/obliques) und Rücken-Trennung (upper-/lower-back) als zuvor.
+// Hüftbeuger-Feld im Asset, daher Iliopsoas/Hüftbeuger in UNMAPPED_MUSCLES
+// statt einer erfundenen Näherung. Dafür feinere Bauch- (abs/obliques) und
+// Rücken-Trennung (upper-/lower-back) als zuvor.
 //
 // Herkunft der Rohbezeichnungen: `SELECT DISTINCT unnest("muscleGroups")
 // FROM "Exercise"` gegen die lokale Dev-DB (83 Übungen, Stand 2026-10).
@@ -76,10 +77,6 @@ export const MUSCLE_TO_REGIONS: Record<string, RegionId[]> = {
   'Obliquus externus': ['front-obliques'],
   'Obliquus internus': ['front-obliques'],
   'Oblique': ['front-obliques'],
-  // Kein eigenes Hüftbeuger-Feld im neuen Asset — Näherung auf Quadrizeps
-  // (anatomisch angrenzend), siehe Freigabe.
-  'Iliopsoas': ['front-quad'],
-  'Hüftbeuger': ['front-quad'],
   'Quadrizeps': ['front-quad'],
   'Rectus femoris': ['front-quad'],
   'Vastus medialis (VMO)': ['front-quad'],
@@ -149,6 +146,8 @@ export const UNMAPPED_MUSCLES = [
   'Sprunggelenkskapsel', // Gelenkkapsel, kein Muskel
   'Atemhilfsmuskulatur', // diffus, überlappt Hals/Brust ohne eindeutige Einzelregion
   'Rotatorenmanschette des Rumpfes', // unübliche Terminologie, vermutlich Seed-Ungenauigkeit
+  'Iliopsoas', // kein eigenes Hüftbeuger-Feld im Asset — keine Näherung auf Quadrizeps
+  'Hüftbeuger', // kein eigenes Hüftbeuger-Feld im Asset — keine Näherung auf Quadrizeps
 ] as const;
 
 export function regionsForMuscle(muscle: string): RegionId[] {

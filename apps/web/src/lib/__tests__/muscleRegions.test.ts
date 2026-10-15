@@ -94,9 +94,11 @@ describe('regionsForMuscle / regionsForMuscles', () => {
 
   // ── Änderungen durch die feinere Asset-Granularität (MuscleMap v2) ──────
 
-  it('Iliopsoas/Hüftbeuger sind jetzt front-quad zugeordnet (kein Hüftbeuger-Feld im Asset)', () => {
-    expect(regionsForMuscle('Iliopsoas')).toEqual(['front-quad']);
-    expect(regionsForMuscle('Hüftbeuger')).toEqual(['front-quad']);
+  it('Iliopsoas/Hüftbeuger sind unmapped (kein Hüftbeuger-Feld im Asset, keine Näherung erfunden)', () => {
+    expect(regionsForMuscle('Iliopsoas')).toEqual([]);
+    expect(regionsForMuscle('Hüftbeuger')).toEqual([]);
+    expect(UNMAPPED_MUSCLES).toContain('Iliopsoas');
+    expect(UNMAPPED_MUSCLES).toContain('Hüftbeuger');
   });
 
   it('Obliquus externus/internus und Oblique sind front-obliques, nicht mehr front-abs', () => {

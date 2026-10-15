@@ -115,7 +115,7 @@ export function MuscleMap({ mode, muscles, activeRegion, onRegionSelect, classNa
   return (
     <div className={`flex flex-col gap-3 ${className}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex gap-1 self-start rounded-md bg-neutral-100 dark:bg-neutral-800 p-1">
+        <div className="flex gap-1 self-start rounded-md bg-neutral-100 p-1">
           {(['front', 'back'] as MuscleMapView[]).map((v) => (
             <button
               key={v}
@@ -124,8 +124,8 @@ export function MuscleMap({ mode, muscles, activeRegion, onRegionSelect, classNa
               aria-pressed={view === v}
               className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
                 view === v
-                  ? 'bg-white dark:bg-neutral-700 text-primary-700 dark:text-primary-300 shadow-sm'
-                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
+                  ? 'bg-white text-primary-700 shadow-sm'
+                  : 'text-neutral-500 hover:text-neutral-700'
               }`}
             >
               {v === 'front' ? 'Vorderseite' : 'Rückseite'}
@@ -133,7 +133,7 @@ export function MuscleMap({ mode, muscles, activeRegion, onRegionSelect, classNa
           ))}
         </div>
 
-        <div className="flex gap-1 self-start rounded-md bg-neutral-100 dark:bg-neutral-800 p-1">
+        <div className="flex gap-1 self-start rounded-md bg-neutral-100 p-1">
           {(['male', 'female'] as MuscleMapGender[]).map((g) => (
             <button
               key={g}
@@ -142,8 +142,8 @@ export function MuscleMap({ mode, muscles, activeRegion, onRegionSelect, classNa
               aria-pressed={gender === g}
               className={`rounded px-3 py-1 text-xs font-medium transition-colors ${
                 gender === g
-                  ? 'bg-white dark:bg-neutral-700 text-primary-700 dark:text-primary-300 shadow-sm'
-                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
+                  ? 'bg-white text-primary-700 shadow-sm'
+                  : 'text-neutral-500 hover:text-neutral-700'
               }`}
             >
               {g === 'male' ? 'Männlich' : 'Weiblich'}
@@ -160,7 +160,7 @@ export function MuscleMap({ mode, muscles, activeRegion, onRegionSelect, classNa
       >
         <path
           d={outlinePath}
-          className="fill-neutral-100 stroke-neutral-300 dark:fill-neutral-800 dark:stroke-neutral-600"
+          className="fill-neutral-100 stroke-neutral-300"
           strokeWidth={2}
           aria-hidden="true"
         />
@@ -180,9 +180,9 @@ export function MuscleMap({ mode, muscles, activeRegion, onRegionSelect, classNa
               ref={(el) => { groupRefs.current[id] = el; }}
               className={`motion-safe:transition-[fill,stroke] motion-safe:duration-200 ${
                 isActive
-                  ? 'fill-primary-500 stroke-primary-700 dark:fill-primary-400 dark:stroke-primary-200'
-                  : 'fill-neutral-200 stroke-neutral-300 dark:fill-neutral-700 dark:stroke-neutral-600'
-              } ${mode === 'interactive' ? 'cursor-pointer outline-none hover:fill-neutral-300 dark:hover:fill-neutral-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600' : ''}`}
+                  ? 'fill-primary-500 stroke-primary-700'
+                  : 'fill-neutral-200 stroke-neutral-300'
+              } ${mode === 'interactive' ? 'cursor-pointer outline-none hover:fill-neutral-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600' : ''}`}
               strokeWidth={isActive ? 2.5 : 1.5}
               tabIndex={mode === 'interactive' ? 0 : undefined}
               role={mode === 'interactive' ? 'button' : undefined}
@@ -195,7 +195,7 @@ export function MuscleMap({ mode, muscles, activeRegion, onRegionSelect, classNa
                 <path key={d} d={d} />
               ))}
               {isActive && marker && (
-                <circle cx={marker[0]} cy={marker[1]} r={8} className="fill-white dark:fill-neutral-900" aria-hidden="true" />
+                <circle cx={marker[0]} cy={marker[1]} r={8} className="fill-white" aria-hidden="true" />
               )}
             </g>
           );
@@ -204,14 +204,14 @@ export function MuscleMap({ mode, muscles, activeRegion, onRegionSelect, classNa
 
       {mode === 'interactive' && (
         <div className="flex items-center justify-between gap-2 text-xs">
-          <span className="text-neutral-500 dark:text-neutral-400">
+          <span className="text-neutral-500">
             {activeRegion ? `Gefiltert: ${MUSCLE_REGIONS[activeRegion].labelDe}` : 'Keine Region ausgewählt'}
           </span>
           <button
             type="button"
             onClick={() => onRegionSelect?.(null)}
             disabled={!activeRegion}
-            className="font-medium text-primary-700 dark:text-primary-300 underline disabled:text-neutral-300 dark:disabled:text-neutral-600 disabled:no-underline"
+            className="font-medium text-primary-700 underline disabled:text-neutral-300 disabled:no-underline"
           >
             Auswahl zurücksetzen
           </button>
@@ -219,10 +219,10 @@ export function MuscleMap({ mode, muscles, activeRegion, onRegionSelect, classNa
       )}
 
       {mode === 'display' && (muscles?.length ?? 0) > 0 && (
-        <p className="text-xs text-neutral-600 dark:text-neutral-300">
+        <p className="text-xs text-neutral-600">
           Trainiert: {muscles!.join(', ')}
           {unmappedPresent.length > 0 && (
-            <span className="text-neutral-400 dark:text-neutral-500"> (auf der Karte nicht darstellbar: {unmappedPresent.join(', ')})</span>
+            <span className="text-neutral-400"> (auf der Karte nicht darstellbar: {unmappedPresent.join(', ')})</span>
           )}
         </p>
       )}
