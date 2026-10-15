@@ -12,6 +12,18 @@ enum UserRole {
   therapist
 }
 
+enum ConsentEventType {
+  granted
+  declined
+  revoked
+}
+
+enum ProgramStatus {
+  active
+  paused
+  completed
+}
+
 // ── DOMAIN MODELS ────────────────────────────────────────────────────────────
 
 model Practice {
@@ -40,7 +52,10 @@ model User {
   updatedAt     DateTime          @updatedAt
   sessions      Session[]
   accounts      Account[]
-  programs      ExerciseProgram[]
+  programs            ExerciseProgram[]      @relation("ProgramTherapist")
+  updatedPrograms     ExerciseProgram[]      @relation("ProgramUpdatedBy")
+  programSnapshots    ProgramSnapshot[]
+  consentEvents       PatientConsentEvent[]
 }
 
 model Patient {
@@ -55,6 +70,35 @@ model Patient {
   createdAt          DateTime          @default(now())
   programs           ExerciseProgram[]
   chatMessages       ChatMessage[]
+
+  // Stabile, nicht erratbare ID für spätere Auswertungen außerhalb der App
+  // (128 Bit Zufall, unabhängig von id/magicLinkToken/Name generiert).
+  // NIEMALS im Patientenportal (routes/patient-portal.ts), in URLs oder in
+  // Logs ausgeben — nur für Therapeuten-seitige Routen/Exports gedacht.
+  pseudonymId String @unique
+
+  consentEvents PatientConsentEvent[]
+}
+
+// Append-only: jede Erteilung, Ablehnung und jeder Widerruf ist ein eigener
+// Eintrag. Keine Updates, keine Löschungen. hasValidConsent()/
+// hasValidConsentAt() in lib/consent.ts bewerten den jeweils letzten
+// (bzw. letzten zu einem Zeitpunkt zutreffenden) Eintrag.
+model PatientConsentEvent {
+  id        String           @id @default(cuid())
+  patientId String
+  patient   Patient          @relation(fields: [patientId], references: [id])
+  type      ConsentEventType
+
+  occurredAt DateTime @default(now())
+  // Version des Einwilligungstexts — validiert gegen CONSENT_TEXT_VERSIONS
+  // in lib/consent.ts, kein Freitext.
+  textVersion String
+
+  recordedById String
+  recordedBy   User   @relation(fields: [recordedById], references: [id])
+
+  createdAt DateTime @default(now())
 }
 
 model Exercise {
@@ -92,12 +136,47 @@ model ExerciseProgram {
   patientId   String
   patient     Patient           @relation(fields: [patientId], references: [id])
   therapistId String
-  therapist   User              @relation(fields: [therapistId], references: [id])
+  therapist   User              @relation("ProgramTherapist", fields: [therapistId], references: [id])
   name        String
   notes       String?
   createdAt   DateTime          @default(now())
   items       ProgramExercise[]
   logs        SessionLog[]
+
+  // ── Laufzeit & Status ────────────────────────────────────────────────────
+  startDate DateTime
+  endDate   DateTime?
+  status    ProgramStatus @default(active)
+
+  // ── Änderungsnachvollziehbarkeit ─────────────────────────────────────────
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+  updatedBy   User?    @relation("ProgramUpdatedBy", fields: [updatedById], references: [id])
+
+  snapshots ProgramSnapshot[]
+}
+
+// Append-only Snapshot-Log: bildet ab, "was galt wann" für ein Programm.
+// Ein neuer Eintrag entsteht bei Programmerstellung sowie bei jeder Änderung
+// an Laufzeit, Status oder Übungsliste/Häufigkeit — nicht bei reiner Name-/
+// Notiz-Änderung. Snapshot-Insert und das zugehörige Programm-Update laufen
+// immer in derselben Transaktion (siehe routes/programs.ts). Reine
+// Lesegrundlage für spätere Batches (getProgramStateAt() in
+// lib/programSnapshot.ts) — hier noch keine Adhärenzlogik.
+model ProgramSnapshot {
+  id        String          @id @default(cuid())
+  programId String
+  program   ExerciseProgram @relation(fields: [programId], references: [id])
+
+  validFrom DateTime
+  // { startDate, endDate, status, items: [{ exerciseId, sets, reps,
+  //   holdSeconds, frequencyPerWeek, order, therapistNote, adaptationIds }] }
+  snapshot Json
+
+  changedById String
+  changedBy   User   @relation(fields: [changedById], references: [id])
+
+  createdAt DateTime @default(now())
 }
 
 model ProgramExercise {

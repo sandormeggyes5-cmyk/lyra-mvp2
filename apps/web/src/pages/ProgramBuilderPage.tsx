@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, ApiError } from '../api/client.ts';
-import type { Exercise, PatientDetail, Program } from '../types.ts';
+import type { Exercise, PatientDetail, Program, ProgramStatus } from '../types.ts';
 import { AppLayout } from '../components/layout/AppLayout.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Input } from '../components/ui/Input.tsx';
@@ -10,6 +10,27 @@ import { ExercisePicker } from '../components/program-builder/ExercisePicker.tsx
 import { ProgramItemEditor, type BuilderItem } from '../components/program-builder/ProgramItemEditor.tsx';
 
 const DEFAULT_FREQUENCY_PER_WEEK = 3;
+
+const STATUS_OPTIONS: { value: ProgramStatus; label: string }[] = [
+  { value: 'active', label: 'Aktiv' },
+  { value: 'paused', label: 'Pausiert' },
+  { value: 'completed', label: 'Beendet' },
+];
+
+function todayIsoDate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function toIsoDate(value: string): string {
+  return value.slice(0, 10);
+}
+
+// Spiegelt validateProgramDates() aus apps/api/src/routes/programs.ts.
+function validateProgramDates(startDate: string, endDate: string): string | null {
+  if (!startDate) return 'Startdatum ist erforderlich.';
+  if (endDate && endDate < startDate) return 'Enddatum darf nicht vor dem Startdatum liegen.';
+  return null;
+}
 
 function buildItemFromExercise(exercise: Exercise): BuilderItem {
   return {
@@ -38,10 +59,14 @@ export function ProgramBuilderPage({ mode }: Props) {
   const [patientName, setPatientName] = useState('');
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
+  const [startDate, setStartDate] = useState(todayIsoDate());
+  const [endDate, setEndDate] = useState('');
+  const [status, setStatus] = useState<ProgramStatus>('active');
   const [items, setItems] = useState<BuilderItem[]>([]);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [dateError, setDateError] = useState('');
 
   // Verlassen mit ungespeicherten Änderungen: Tab schließen/neu laden.
   // In-App-Navigation außerhalb dieser Seite (z. B. Klick im Header) lässt
@@ -81,6 +106,9 @@ export function ProgramBuilderPage({ mode }: Props) {
           setPatientName(program.patient.name);
           setName(program.name);
           setNotes(program.notes ?? '');
+          setStartDate(toIsoDate(program.startDate));
+          setEndDate(program.endDate ? toIsoDate(program.endDate) : '');
+          setStatus(program.status);
           setItems(
             program.items.map((item) => ({
               exerciseId: item.exercise.id,
@@ -145,9 +173,15 @@ export function ProgramBuilderPage({ mode }: Props) {
       setSubmitError('Mindestens eine Übung auswählen.');
       return;
     }
+    const dateValidationError = validateProgramDates(startDate, endDate);
+    if (dateValidationError) {
+      setDateError(dateValidationError);
+      return;
+    }
 
     setSaving(true);
     setSubmitError('');
+    setDateError('');
 
     const payloadItems = items.map((item, idx) => ({
       exerciseId: item.exerciseId,
@@ -166,12 +200,17 @@ export function ProgramBuilderPage({ mode }: Props) {
           patientId,
           name: name.trim(),
           notes: notes.trim() || undefined,
+          startDate,
+          endDate: endDate || undefined,
           items: payloadItems,
         });
       } else {
         await api.put(`/api/v1/programs/${programId}`, {
           name: name.trim(),
           notes: notes.trim() || undefined,
+          startDate,
+          endDate: endDate || null,
+          status,
         });
         await api.put(`/api/v1/programs/${programId}/items`, { items: payloadItems });
       }
@@ -235,6 +274,37 @@ export function ProgramBuilderPage({ mode }: Props) {
                 className="w-full rounded-md border border-neutral-300 px-3 py-2 text-body text-neutral-900 placeholder:text-neutral-400 outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
               />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Startdatum"
+                type="date"
+                value={startDate}
+                onChange={(e) => { setStartDate(e.target.value); setDateError(''); setDirty(true); }}
+                required
+              />
+              <Input
+                label="Enddatum (optional)"
+                type="date"
+                value={endDate}
+                onChange={(e) => { setEndDate(e.target.value); setDateError(''); setDirty(true); }}
+              />
+            </div>
+            {dateError && <p role="alert" aria-live="polite" className="text-xs text-danger">{dateError}</p>}
+            {mode === 'edit' && (
+              <div className="flex flex-col gap-1">
+                <label htmlFor="program-status" className="text-body-sm font-medium text-neutral-700">Status</label>
+                <select
+                  id="program-status"
+                  value={status}
+                  onChange={(e) => { setStatus(e.target.value as ProgramStatus); setDirty(true); }}
+                  className="w-full rounded-md border border-neutral-300 px-3 py-2 text-body text-neutral-900 outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  {STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {items.length === 0 ? (

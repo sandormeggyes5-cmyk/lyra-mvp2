@@ -14,6 +14,9 @@
     "db:seed": "prisma db seed",
     "db:seed:adaptations": "tsx prisma/seed-adaptations.ts",
     "db:backfill-taxonomy": "tsx prisma/backfill-taxonomy.ts",
+    "db:backfill-program-startdate": "tsx prisma/backfill-program-startdate.ts",
+    "db:backfill-program-snapshots": "tsx prisma/backfill-program-snapshots.ts",
+    "db:backfill-pseudonym-id": "tsx prisma/backfill-pseudonym-id.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
   },

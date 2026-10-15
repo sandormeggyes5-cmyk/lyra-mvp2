@@ -3,7 +3,8 @@ import request from 'supertest';
 
 const mockTx = {
   programExercise: { deleteMany: vi.fn() },
-  exerciseProgram: { update: vi.fn() },
+  exerciseProgram: { create: vi.fn(), update: vi.fn() },
+  programSnapshot: { create: vi.fn() },
 };
 
 vi.mock('../lib/prisma.js', () => ({
@@ -43,6 +44,7 @@ import { auth } from '../lib/auth.js';
 import { app } from '../app.js';
 
 const PRACTICE_ID = 'practice-1';
+const DEFAULT_START_DATE = new Date('2026-01-01');
 
 const exerciseBridge = {
   id: 'ex-bruecke',
@@ -90,9 +92,15 @@ beforeEach(() => {
   vi.mocked(prisma.patient.findFirst).mockResolvedValue({ id: 'patient-1', practiceId: PRACTICE_ID } as any);
   vi.mocked(prisma.exercise.findMany).mockResolvedValue([exerciseBridge] as any);
   vi.mocked(prisma.exerciseAdaptation.findMany).mockResolvedValue([]);
-  vi.mocked(prisma.exerciseProgram.create).mockResolvedValue({ id: 'prog-1', items: [] } as any);
-  vi.mocked(prisma.exerciseProgram.findFirst).mockResolvedValue({ id: 'prog-1', patientId: 'patient-1' } as any);
-  mockTx.exerciseProgram.update.mockResolvedValue({ id: 'prog-1', items: [] } as any);
+  mockTx.exerciseProgram.create.mockResolvedValue({
+    id: 'prog-1', items: [], startDate: DEFAULT_START_DATE, endDate: null, status: 'active',
+  } as any);
+  vi.mocked(prisma.exerciseProgram.findFirst).mockResolvedValue({
+    id: 'prog-1', patientId: 'patient-1', startDate: DEFAULT_START_DATE, endDate: null, status: 'active', items: [],
+  } as any);
+  mockTx.exerciseProgram.update.mockResolvedValue({
+    id: 'prog-1', items: [], startDate: DEFAULT_START_DATE, endDate: null, status: 'active',
+  } as any);
 });
 
 // ── POST /api/v1/programs — Mengen-Validierung ───────────────────────────────
@@ -116,7 +124,7 @@ describe('POST /api/v1/programs — Validierung von sets/reps/frequencyPerWeek/h
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(errorPattern);
-    expect(prisma.exerciseProgram.create).not.toHaveBeenCalled();
+    expect(mockTx.exerciseProgram.create).not.toHaveBeenCalled();
   });
 
   it('akzeptiert Grenzwerte (sets/reps/frequencyPerWeek = 1 und 100, holdSeconds = 1 und 600)', async () => {
@@ -172,6 +180,167 @@ describe('PUT /api/v1/programs/:id/items — Mengen-Validierung', () => {
 
     expect(res.status).toBe(200);
   });
+
+  it('erzeugt immer einen neuen ProgramSnapshot (Übungsliste/Häufigkeit zählt immer als Änderung)', async () => {
+    const res = await request(app)
+      .put('/api/v1/programs/prog-1/items')
+      .send({ items: [validItem()] });
+
+    expect(res.status).toBe(200);
+    expect(mockTx.programSnapshot.create).toHaveBeenCalledTimes(1);
+    expect(mockTx.programSnapshot.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ programId: 'prog-1', changedById: 'therapist-1' }) }),
+    );
+    expect(mockTx.exerciseProgram.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ updatedById: 'therapist-1' }) }),
+    );
+  });
+});
+
+// ── Programmlaufzeit (A1) ────────────────────────────────────────────────────
+
+describe('POST /api/v1/programs — Programmlaufzeit', () => {
+  it('setzt startDate auf heute, wenn keins übergeben wird', async () => {
+    const before = Date.now();
+    const res = await request(app)
+      .post('/api/v1/programs')
+      .send({ patientId: 'patient-1', name: 'Testprogramm', items: [validItem()] });
+
+    expect(res.status).toBe(201);
+    const sentStartDate = (mockTx.exerciseProgram.create.mock.calls[0]![0] as any).data.startDate as Date;
+    expect(sentStartDate.getTime()).toBeGreaterThanOrEqual(before);
+  });
+
+  it('übernimmt ein übergebenes startDate/endDate', async () => {
+    const res = await request(app)
+      .post('/api/v1/programs')
+      .send({
+        patientId: 'patient-1',
+        name: 'Testprogramm',
+        startDate: '2026-02-01',
+        endDate: '2026-08-01',
+        items: [validItem()],
+      });
+
+    expect(res.status).toBe(201);
+    expect(mockTx.exerciseProgram.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ startDate: new Date('2026-02-01'), endDate: new Date('2026-08-01') }),
+      }),
+    );
+  });
+
+  it('lehnt endDate vor startDate ab, ohne das Programm anzulegen', async () => {
+    const res = await request(app)
+      .post('/api/v1/programs')
+      .send({
+        patientId: 'patient-1',
+        name: 'Testprogramm',
+        startDate: '2026-08-01',
+        endDate: '2026-02-01',
+        items: [validItem()],
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/endDate/);
+    expect(mockTx.exerciseProgram.create).not.toHaveBeenCalled();
+  });
+
+  it('erzeugt bei der Programmerstellung einen initialen ProgramSnapshot mit validFrom = startDate', async () => {
+    const res = await request(app)
+      .post('/api/v1/programs')
+      .send({ patientId: 'patient-1', name: 'Testprogramm', startDate: '2026-02-01', items: [validItem()] });
+
+    expect(res.status).toBe(201);
+    expect(mockTx.programSnapshot.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ programId: 'prog-1', validFrom: DEFAULT_START_DATE, changedById: 'therapist-1' }),
+      }),
+    );
+  });
+});
+
+describe('PUT /api/v1/programs/:id — Laufzeit, Status, updatedAt/updatedById, Änderungsregel (C9)', () => {
+  it('lehnt endDate vor startDate ab', async () => {
+    const res = await request(app)
+      .put('/api/v1/programs/prog-1')
+      .send({ startDate: '2026-08-01', endDate: '2026-02-01' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/endDate/);
+    expect(mockTx.exerciseProgram.update).not.toHaveBeenCalled();
+  });
+
+  it('lehnt einen unbekannten status ab', async () => {
+    const res = await request(app)
+      .put('/api/v1/programs/prog-1')
+      .send({ status: 'erledigt' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/status/);
+    expect(mockTx.exerciseProgram.update).not.toHaveBeenCalled();
+  });
+
+  it('setzt updatedById bei jedem Aufruf, auch bei reiner Name-Änderung', async () => {
+    const res = await request(app)
+      .put('/api/v1/programs/prog-1')
+      .send({ name: 'Neuer Name' });
+
+    expect(res.status).toBe(200);
+    expect(mockTx.exerciseProgram.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ updatedById: 'therapist-1' }) }),
+    );
+  });
+
+  it('erzeugt KEINEN Snapshot bei reiner Name-/Notiz-Änderung', async () => {
+    const res = await request(app)
+      .put('/api/v1/programs/prog-1')
+      .send({ name: 'Neuer Name', notes: 'Neue Notiz' });
+
+    expect(res.status).toBe(200);
+    expect(mockTx.programSnapshot.create).not.toHaveBeenCalled();
+  });
+
+  it('erzeugt einen Snapshot, wenn sich startDate ändert', async () => {
+    const res = await request(app)
+      .put('/api/v1/programs/prog-1')
+      .send({ startDate: '2026-03-01' });
+
+    expect(res.status).toBe(200);
+    expect(mockTx.programSnapshot.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('erzeugt einen Snapshot, wenn sich status ändert (Pause verändert das Soll)', async () => {
+    const res = await request(app)
+      .put('/api/v1/programs/prog-1')
+      .send({ status: 'paused' });
+
+    expect(res.status).toBe(200);
+    expect(mockTx.programSnapshot.create).toHaveBeenCalledTimes(1);
+    expect(mockTx.exerciseProgram.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: 'paused' }) }),
+    );
+  });
+
+  it('erzeugt einen Snapshot, wenn sich endDate ändert', async () => {
+    const res = await request(app)
+      .put('/api/v1/programs/prog-1')
+      .send({ endDate: '2026-12-01' });
+
+    expect(res.status).toBe(200);
+    expect(mockTx.programSnapshot.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('Mandantentrennung: 404 für ein Programm aus einer anderen Praxis', async () => {
+    vi.mocked(prisma.exerciseProgram.findFirst).mockResolvedValue(null);
+
+    const res = await request(app)
+      .put('/api/v1/programs/fremdes-programm')
+      .send({ status: 'paused' });
+
+    expect(res.status).toBe(404);
+    expect(mockTx.exerciseProgram.update).not.toHaveBeenCalled();
+  });
 });
 
 // ── Fachliche Freigabe: unvalidierte Übungen/Anpassungen dürfen nicht ──────
@@ -191,7 +360,7 @@ describe('Verordnung von fachlich nicht freigegebenen Übungen/Anpassungen', () 
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/nicht freigegeben/);
-    expect(prisma.exerciseProgram.create).not.toHaveBeenCalled();
+    expect(mockTx.exerciseProgram.create).not.toHaveBeenCalled();
   });
 
   it('POST /api/v1/programs erlaubt eine unvalidierte Übung mit aktivem Dev-Bypass', async () => {
@@ -245,7 +414,7 @@ describe('Verordnung von fachlich nicht freigegebenen Übungen/Anpassungen', () 
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/nicht freigegeben/);
-    expect(prisma.exerciseProgram.create).not.toHaveBeenCalled();
+    expect(mockTx.exerciseProgram.create).not.toHaveBeenCalled();
   });
 
   it('POST /api/v1/programs akzeptiert eine validierte Anpassung', async () => {

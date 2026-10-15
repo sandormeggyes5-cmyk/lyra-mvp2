@@ -38,6 +38,7 @@ import { app } from '../app.js';
 const activePatient = {
   id: 'patient-1',
   name: 'Hans Muster',
+  pseudonymId: 'a1b2c3d4e5f60718293a4b5c6d7e8f90',
   magicLinkToken: 'active-token',
   magicLinkExpiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
   practice: { name: 'Praxis Bergmann' },
@@ -119,6 +120,15 @@ describe('GET /api/v1/p/:token — Token-Validierung', () => {
     const res = await request(app).get('/api/v1/p/active-token');
 
     expect(JSON.stringify(res.body)).not.toContain('magicLinkToken');
+  });
+
+  it('gibt kein pseudonymId im Patientenportal zurück (kein Pseudonym-Leak)', async () => {
+    vi.mocked(prisma.patient.findUnique).mockResolvedValue(activePatient as any);
+
+    const res = await request(app).get('/api/v1/p/active-token');
+
+    expect(JSON.stringify(res.body)).not.toContain(activePatient.pseudonymId);
+    expect(JSON.stringify(res.body)).not.toContain('pseudonymId');
   });
 
   it('akzeptiert Token ohne Ablaufdatum (null)', async () => {

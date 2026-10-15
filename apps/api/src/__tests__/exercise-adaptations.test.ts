@@ -1,12 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 
+const mockTx = {
+  exerciseProgram: { create: vi.fn() },
+  programSnapshot: { create: vi.fn() },
+};
+
 vi.mock('../lib/prisma.js', () => ({
   prisma: {
     patient: { findFirst: vi.fn() },
     exercise: { findMany: vi.fn(), findUnique: vi.fn() },
     exerciseAdaptation: { findMany: vi.fn(), create: vi.fn() },
     exerciseProgram: { create: vi.fn() },
+    $transaction: vi.fn(async (cb: (tx: typeof mockTx) => unknown) => cb(mockTx)),
   },
 }));
 
@@ -102,14 +108,20 @@ describe('POST /api/v1/programs — Mandantentrennung bei ExerciseAdaptation (mi
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/gehört nicht zu dieser Praxis/i);
     // Am wichtigsten: das Programm darf in diesem Fall gar nicht erst angelegt werden.
-    expect(prisma.exerciseProgram.create).not.toHaveBeenCalled();
+    expect(mockTx.exerciseProgram.create).not.toHaveBeenCalled();
   });
 
   it('erlaubt eine System-Anpassung (isSystem: true, keine Praxis)', async () => {
     vi.mocked(prisma.exerciseAdaptation.findMany).mockResolvedValue([
       { id: 'adapt-system', exerciseId: exerciseBridge.id, isSystem: true, practiceId: null, isValidated: true },
     ] as any);
-    vi.mocked(prisma.exerciseProgram.create).mockResolvedValue({ id: 'prog-1', items: [] } as any);
+    mockTx.exerciseProgram.create.mockResolvedValue({
+      id: 'prog-1',
+      items: [],
+      startDate: new Date('2026-01-01'),
+      endDate: null,
+      status: 'active',
+    } as any);
 
     const res = await request(app)
       .post('/api/v1/programs')
@@ -122,7 +134,7 @@ describe('POST /api/v1/programs — Mandantentrennung bei ExerciseAdaptation (mi
       });
 
     expect(res.status).toBe(201);
-    expect(prisma.exerciseProgram.create).toHaveBeenCalledWith(
+    expect(mockTx.exerciseProgram.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           items: {
@@ -141,7 +153,13 @@ describe('POST /api/v1/programs — Mandantentrennung bei ExerciseAdaptation (mi
     vi.mocked(prisma.exerciseAdaptation.findMany).mockResolvedValue([
       { id: 'adapt-own', exerciseId: exerciseBridge.id, isSystem: false, practiceId: PRACTICE_A, isValidated: true },
     ] as any);
-    vi.mocked(prisma.exerciseProgram.create).mockResolvedValue({ id: 'prog-1', items: [] } as any);
+    mockTx.exerciseProgram.create.mockResolvedValue({
+      id: 'prog-1',
+      items: [],
+      startDate: new Date('2026-01-01'),
+      endDate: null,
+      status: 'active',
+    } as any);
 
     const res = await request(app)
       .post('/api/v1/programs')
@@ -154,7 +172,7 @@ describe('POST /api/v1/programs — Mandantentrennung bei ExerciseAdaptation (mi
       });
 
     expect(res.status).toBe(201);
-    expect(prisma.exerciseProgram.create).toHaveBeenCalled();
+    expect(mockTx.exerciseProgram.create).toHaveBeenCalled();
   });
 
   it('lehnt eine adaptationId ab, die zu einer anderen Übung gehört', async () => {
@@ -174,7 +192,7 @@ describe('POST /api/v1/programs — Mandantentrennung bei ExerciseAdaptation (mi
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/gehört nicht zur Übung/i);
-    expect(prisma.exerciseProgram.create).not.toHaveBeenCalled();
+    expect(mockTx.exerciseProgram.create).not.toHaveBeenCalled();
   });
 
   it('lehnt eine unbekannte adaptationId ab', async () => {
@@ -192,7 +210,7 @@ describe('POST /api/v1/programs — Mandantentrennung bei ExerciseAdaptation (mi
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/nicht gefunden/i);
-    expect(prisma.exerciseProgram.create).not.toHaveBeenCalled();
+    expect(mockTx.exerciseProgram.create).not.toHaveBeenCalled();
   });
 });
 

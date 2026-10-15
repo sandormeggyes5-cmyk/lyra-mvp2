@@ -2,14 +2,24 @@ import { Router, type Request, type Response } from 'express';
 import { randomBytes } from 'crypto';
 import { prisma } from '../lib/prisma.js';
 import { requireAuth, type AuthRequest } from '../middleware/requireAuth.js';
+import { CONSENT_TEXT_VERSIONS, isKnownConsentTextVersion, hasValidConsent } from '../lib/consent.js';
+import type { ConsentEventType } from '@prisma/client';
 
 const router = Router();
 router.use(requireAuth);
 
 const MAGIC_LINK_EXPIRY_DAYS = 90;
+const CONSENT_EVENT_TYPES: ConsentEventType[] = ['granted', 'declined', 'revoked'];
 
 function generateToken(): string {
   return randomBytes(32).toString('hex');
+}
+
+// Stabile, nicht erratbare ID für spätere Auswertungen außerhalb der App —
+// unabhängig von id/magicLinkToken/Name generiert (siehe Kommentar auf
+// Patient.pseudonymId in schema.prisma).
+function generatePseudonymId(): string {
+  return randomBytes(16).toString('hex');
 }
 
 function magicLinkUrl(token: string): string {
@@ -110,6 +120,7 @@ router.post('/', async (req: Request, res: Response) => {
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
       magicLinkToken: token,
       magicLinkExpiresAt: expiresAt,
+      pseudonymId: generatePseudonymId(),
     },
   });
 
@@ -143,6 +154,60 @@ router.post('/:id/magic-link', async (req: Request, res: Response) => {
     magicLink: magicLinkUrl(updated.magicLinkToken),
     magicLinkExpiresAt: updated.magicLinkExpiresAt,
   });
+});
+
+// GET /api/v1/patients/:id/consent — vollständige Event-Historie + aktueller Status
+router.get('/:id/consent', async (req: Request, res: Response) => {
+  const { practiceId } = (req as AuthRequest).authUser;
+
+  const patient = await prisma.patient.findFirst({ where: { id: req.params.id, practiceId } });
+  if (!patient) {
+    res.status(404).json({ error: 'Patient nicht gefunden' });
+    return;
+  }
+
+  const events = await prisma.patientConsentEvent.findMany({
+    where: { patientId: patient.id },
+    orderBy: { occurredAt: 'desc' },
+    include: { recordedBy: { select: { id: true, name: true } } },
+  });
+
+  res.json({ events, hasValidConsent: hasValidConsent(events) });
+});
+
+// POST /api/v1/patients/:id/consent — neues Einwilligungs-Event anhängen
+// (granted/declined/revoked). Append-only — keine Updates, keine
+// Zustandsmaschine/Übergangsvalidierung (siehe lib/consent.ts).
+router.post('/:id/consent', async (req: Request, res: Response) => {
+  const { practiceId, id: recordedById } = (req as AuthRequest).authUser;
+  const { type, textVersion } = req.body as { type?: string; textVersion?: string };
+
+  const patient = await prisma.patient.findFirst({ where: { id: req.params.id, practiceId } });
+  if (!patient) {
+    res.status(404).json({ error: 'Patient nicht gefunden' });
+    return;
+  }
+
+  if (!type || !CONSENT_EVENT_TYPES.includes(type as ConsentEventType)) {
+    res.status(400).json({ error: `type muss einer von ${CONSENT_EVENT_TYPES.join(', ')} sein` });
+    return;
+  }
+  if (!textVersion || !isKnownConsentTextVersion(textVersion)) {
+    res.status(400).json({ error: `textVersion muss eine bekannte Version sein: ${CONSENT_TEXT_VERSIONS.join(', ')}` });
+    return;
+  }
+
+  const event = await prisma.patientConsentEvent.create({
+    data: {
+      patientId: patient.id,
+      type: type as ConsentEventType,
+      textVersion,
+      recordedById,
+    },
+    include: { recordedBy: { select: { id: true, name: true } } },
+  });
+
+  res.status(201).json({ event });
 });
 
 export { router as patientsRouter };

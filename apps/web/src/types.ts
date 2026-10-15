@@ -70,11 +70,16 @@ export interface ProgramItem {
   exercise: Exercise;
 }
 
+export type ProgramStatus = 'active' | 'paused' | 'completed';
+
 export interface Program {
   id: string;
   name: string;
   notes?: string | null;
   createdAt: string;
+  startDate: string;
+  endDate?: string | null;
+  status: ProgramStatus;
   therapist: { id: string; name: string };
   items: ProgramItem[];
   _count?: { logs: number };
@@ -82,4 +87,14 @@ export interface Program {
 
 export interface PatientDetail extends Patient {
   programs: Program[];
+}
+
+export type ConsentEventType = 'granted' | 'declined' | 'revoked';
+
+export interface ConsentEvent {
+  id: string;
+  type: ConsentEventType;
+  occurredAt: string;
+  textVersion: string;
+  recordedBy: { id: string; name: string };
 }
