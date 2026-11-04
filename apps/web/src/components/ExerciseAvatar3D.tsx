@@ -149,7 +149,7 @@ function LoadingMesh() {
   return (
     <mesh ref={ref} position={[0, 80, 0]}>
       <capsuleGeometry args={[20, 80, 6, 12]} />
-      <meshStandardMaterial color="#93c5fd" wireframe />
+      <meshStandardMaterial color="#5fa89f" wireframe />
     </mesh>
   );
 }
@@ -158,7 +158,7 @@ function LoadingMesh() {
 function Environment() {
   return (
     <>
-      <color attach="background" args={['#f8fafc']} />
+      <color attach="background" args={['#f5f8f7']} />
       <ambientLight intensity={0.7} />
       <directionalLight
         position={[200, 300, 150]}
@@ -176,7 +176,7 @@ function Environment() {
       <directionalLight position={[-150, 200, -100]} intensity={0.5} />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[1000, 1000]} />
-        <meshStandardMaterial color="#e2e8f0" />
+        <meshStandardMaterial color="#d3dedb" />
       </mesh>
       <ContactShadows
         position={[0, 1, 0]}

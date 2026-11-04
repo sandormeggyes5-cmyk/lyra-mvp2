@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-const C = '#1e40af';
+const C = '#0b4f4a';
 
 function ln(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number) {
   ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
@@ -13,7 +13,7 @@ function setup(ctx: CanvasRenderingContext2D) {
   ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 }
 function gnd(ctx: CanvasRenderingContext2D, w: number, y: number) {
-  ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2.5;
+  ctx.strokeStyle = '#b3c3c0'; ctx.lineWidth = 2.5;
   ln(ctx, 12, y, w - 12, y);
 }
 

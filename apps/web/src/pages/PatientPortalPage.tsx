@@ -351,7 +351,7 @@ function KaiChat({ token, patientName, programs }: { token: string; patientName:
         aria-expanded={open}
       >
         <div className="flex items-center gap-3">
-          <div aria-hidden="true" className="w-9 h-9 rounded-full bg-accent-tint flex items-center justify-center text-accent-600 font-display font-semibold text-sm">K</div>
+          <div aria-hidden="true" className="w-9 h-9 rounded-full bg-primary-600 flex items-center justify-center text-white font-display font-semibold text-sm">K</div>
           <div>
             <p className="font-display font-semibold text-neutral-900">Kai — Übungsassistent</p>
             <p className="text-xs text-neutral-400">Fragen zu deinen Übungen</p>
@@ -376,7 +376,7 @@ function KaiChat({ token, patientName, programs }: { token: string; patientName:
                   className={`max-w-[80%] rounded-lg px-4 py-2.5 text-body-sm leading-relaxed ${
                     msg.role === 'user'
                       ? 'bg-primary-600 text-white rounded-br-sm'
-                      : 'bg-accent-tint text-neutral-800 rounded-bl-sm'
+                      : 'bg-primary-100 text-primary-800 rounded-bl-sm'
                   }`}
                 >
                   {msg.content}
@@ -385,11 +385,11 @@ function KaiChat({ token, patientName, programs }: { token: string; patientName:
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-accent-tint rounded-lg rounded-bl-sm px-4 py-3">
+                <div className="bg-primary-100 rounded-lg rounded-bl-sm px-4 py-3">
                   <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-accent-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-accent-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-accent-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
