@@ -1,6 +1,6 @@
 /**
  * Markenzeichen Konzept A „Winkel-K“ (Nov. 2026) — gleiche Geometrie wie in
- * lyra-app `src/brand/Logos.jsx`; bei Änderungen beide Stellen synchron halten.
+ * der Kai-App (Ordner lyra-app) `src/brand/Logos.jsx`; bei Änderungen beide Stellen synchron halten.
  * PhysioPilot (Dachmarke): Goniometer im abgerundeten Quadrat.
  * Kai (Untermarke): das K als Goniometer im Kreis.
  */

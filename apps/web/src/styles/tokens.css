@@ -1,19 +1,19 @@
 /**
- * Lyra Design Tokens
+ * PhysioPilot Design Tokens
  *
  * Strukturell an DESIGN.md (Linear-Analyse) angelehnt — benanntes Token-
  * System, 4px-Spacing-Basis, dieselbe Komponenten-Referenz-Logik.
  * Markenidentität (Farben, Schrift, Radius, Schatten) ist eigenständig für
- * Lyra entwickelt, nicht von Linear übernommen.
+ * PhysioPilot entwickelt, nicht von Linear übernommen.
  *
- * Farben & Schrift: LyraKai-Design-System (Teal #0f766e / Pulse #ff7a3d /
- * Inter) — dasselbe wie die LyraKai-Landingpage und die Kai-Standalone-App
- * (lyra-app). Primär-600 = teal, -800 = teal-strong, -100 = teal-soft;
+ * Farben & Schrift: PhysioPilot-Design-System (Teal #0f766e / Pulse #ff7a3d /
+ * Inter) — dasselbe wie die PhysioPilot-Landingpage und die Kai-Standalone-App
+ * (Ordner lyra-app). Primär-600 = teal, -800 = teal-strong, -100 = teal-soft;
  * Neutral-900 = ink, -600 = ink-muted, -200 = line, -0 = surface.
  */
 
 :root {
-  /* ── Farben: Primär (LyraKai-Teal) ─────────────────────────────── */
+  /* ── Farben: Primär (PhysioPilot-Teal) ─────────────────────────────── */
   --color-primary-50: #eef7f5;
   --color-primary-100: #d7efeb; /* teal-soft: Kai-Bubbles, ausgewählte Zeilen */
   --color-primary-200: #a9dbd3;
