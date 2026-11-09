@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button.tsx';
 import { Modal } from '../components/ui/Modal.tsx';
 import { ExerciseAvatar3D, type BodyType } from '../components/ExerciseAvatar3D.tsx';
 import { MuscleMap } from '../components/MuscleMap.tsx';
+import { KaiMark } from '../components/ui/BrandMarks.tsx';
 
 // Prototyp (siehe Plan "3D-Avatar-Varianten — Prototyp Kniebeuge"): eine
 // bereits vom Therapeuten zugewiesene ExerciseAdaptation kann eine
@@ -351,7 +352,7 @@ function KaiChat({ token, patientName, programs }: { token: string; patientName:
         aria-expanded={open}
       >
         <div className="flex items-center gap-3">
-          <div aria-hidden="true" className="w-9 h-9 rounded-full bg-primary-600 flex items-center justify-center text-white font-display font-semibold text-sm">K</div>
+          <KaiMark size={36} />
           <div>
             <p className="font-display font-semibold text-neutral-900">Kai — Übungsassistent</p>
             <p className="text-xs text-neutral-400">Fragen zu deinen Übungen</p>
