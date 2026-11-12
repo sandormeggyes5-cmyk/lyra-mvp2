@@ -38,7 +38,7 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>Lyra</h1>
+        <h1>PhysioPilot</h1>
       </header>
 
       <main className="messages">
@@ -62,7 +62,7 @@ export default function App() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Message Lyra..."
+          placeholder="Message PhysioPilot..."
           disabled={loading}
           autoFocus
         />

@@ -3,8 +3,29 @@ import { useParams } from 'react-router-dom';
 import { Spinner } from '../components/ui/Spinner.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { Modal } from '../components/ui/Modal.tsx';
-import { ExerciseAvatar3D } from '../components/ExerciseAvatar3D.tsx';
+import { ExerciseAvatar3D, type BodyType } from '../components/ExerciseAvatar3D.tsx';
 import { MuscleMap } from '../components/MuscleMap.tsx';
+import { KaiMark } from '../components/ui/BrandMarks.tsx';
+
+// Prototyp (siehe Plan "3D-Avatar-Varianten — Prototyp Kniebeuge"): eine
+// bereits vom Therapeuten zugewiesene ExerciseAdaptation kann eine
+// passende Körperbau-/Haltungsvariante der 3D-Demo vorauswählen — keine
+// automatische Ableitung aus Patientenmerkmalen, nur eine Konsequenz einer
+// bereits getroffenen, expliziten Entscheidung. Bleibt in der 3D-Ansicht
+// manuell überschreibbar (siehe ExerciseAvatar3D.tsx `preferredVariant`).
+const ADAPTATION_LABEL_TO_VARIANT: Record<string, BodyType> = {
+  'Körperbau: schlanker': 'schlank',
+  'Körperbau: kräftiger': 'kraeftig',
+  'Haltung: Hohlkreuz': 'hohlkreuz',
+};
+
+function preferredAvatarVariant(adaptations: { labelDe: string }[]): BodyType | undefined {
+  for (const a of adaptations) {
+    const variant = ADAPTATION_LABEL_TO_VARIANT[a.labelDe];
+    if (variant) return variant;
+  }
+  return undefined;
+}
 
 // --- Typen ---
 interface PortalExercise {
@@ -181,7 +202,7 @@ function ProgramCard({ program, token }: { program: PortalProgram; token: string
                     {item.exercise.descriptionDe}
                   </p>
                 )}
-                <ExerciseAvatar3D exerciseName={item.exercise.nameDe} />
+                <ExerciseAvatar3D exerciseName={item.exercise.nameDe} preferredVariant={preferredAvatarVariant(item.adaptations)} />
                 <MuscleMap mode="display" muscles={item.exercise.muscleGroups} className="mt-3" />
 
                 {item.adaptations.length > 0 && (
@@ -331,7 +352,7 @@ function KaiChat({ token, patientName, programs }: { token: string; patientName:
         aria-expanded={open}
       >
         <div className="flex items-center gap-3">
-          <div aria-hidden="true" className="w-9 h-9 rounded-full bg-accent-tint flex items-center justify-center text-accent-600 font-display font-semibold text-sm">K</div>
+          <KaiMark size={36} />
           <div>
             <p className="font-display font-semibold text-neutral-900">Kai — Übungsassistent</p>
             <p className="text-xs text-neutral-400">Fragen zu deinen Übungen</p>
@@ -356,7 +377,7 @@ function KaiChat({ token, patientName, programs }: { token: string; patientName:
                   className={`max-w-[80%] rounded-lg px-4 py-2.5 text-body-sm leading-relaxed ${
                     msg.role === 'user'
                       ? 'bg-primary-600 text-white rounded-br-sm'
-                      : 'bg-accent-tint text-neutral-800 rounded-bl-sm'
+                      : 'bg-primary-100 text-primary-800 rounded-bl-sm'
                   }`}
                 >
                   {msg.content}
@@ -365,11 +386,11 @@ function KaiChat({ token, patientName, programs }: { token: string; patientName:
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-accent-tint rounded-lg rounded-bl-sm px-4 py-3">
+                <div className="bg-primary-100 rounded-lg rounded-bl-sm px-4 py-3">
                   <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-accent-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-accent-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-accent-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>

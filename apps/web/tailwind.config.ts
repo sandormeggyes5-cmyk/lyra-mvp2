@@ -3,7 +3,7 @@ import type { Config } from 'tailwindcss';
 // Werte spiegeln apps/web/src/styles/tokens.css — Farben/Radius/Schatten/
 // Motion als CSS-Variablen definiert, hier für Tailwind-Utilities nutzbar
 // gemacht. Strukturell an DESIGN.md (Linear-Analyse) angelehnt, eigene
-// Lyra-Markenidentität (siehe Phase-3-Konzept).
+// PhysioPilot-Markenidentität (siehe Phase-3-Konzept).
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
@@ -46,8 +46,8 @@ export default {
         danger: { DEFAULT: 'var(--color-danger)', tint: 'var(--color-danger-tint)' },
       },
       fontFamily: {
-        display: ['Fraunces', 'Georgia', 'serif'],
-        body: ['Geist', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        display: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        body: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
         mono: ['Geist Mono', 'ui-monospace', 'SF Mono', 'Menlo', 'monospace'],
       },
       fontSize: {

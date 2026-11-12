@@ -1,64 +1,69 @@
 /**
- * Lyra Design Tokens
+ * PhysioPilot Design Tokens
  *
  * Strukturell an DESIGN.md (Linear-Analyse) angelehnt — benanntes Token-
  * System, 4px-Spacing-Basis, dieselbe Komponenten-Referenz-Logik.
  * Markenidentität (Farben, Schrift, Radius, Schatten) ist eigenständig für
- * Lyra entwickelt, nicht von Linear übernommen.
+ * PhysioPilot entwickelt, nicht von Linear übernommen.
+ *
+ * Farben & Schrift: PhysioPilot-Design-System (Teal #0f766e / Pulse #ff7a3d /
+ * Inter) — dasselbe wie die PhysioPilot-Landingpage und die Kai-Standalone-App
+ * (Ordner lyra-app). Primär-600 = teal, -800 = teal-strong, -100 = teal-soft;
+ * Neutral-900 = ink, -600 = ink-muted, -200 = line, -0 = surface.
  */
 
 :root {
-  /* ── Farben: Primär (warmes Teal) ───────────────────────────────── */
-  --color-primary-50: #eaf6f3;
-  --color-primary-100: #cfeae3;
-  --color-primary-200: #9fd5c8;
-  --color-primary-300: #6fbfac;
-  --color-primary-400: #3fa991;
-  --color-primary-500: #17947a;
-  --color-primary-600: #0f7c65; /* Hauptmarke, primäre Buttons/Links */
-  --color-primary-700: #0c6453;
-  --color-primary-800: #094c40;
-  --color-primary-900: #06332a;
+  /* ── Farben: Primär (PhysioPilot-Teal) ─────────────────────────────── */
+  --color-primary-50: #eef7f5;
+  --color-primary-100: #d7efeb; /* teal-soft: Kai-Bubbles, ausgewählte Zeilen */
+  --color-primary-200: #a9dbd3;
+  --color-primary-300: #74c0b5;
+  --color-primary-400: #3fa196;
+  --color-primary-500: #1a8a7f;
+  --color-primary-600: #0f766e; /* teal: Hauptmarke, primäre Buttons/Links */
+  --color-primary-700: #0d625b;
+  --color-primary-800: #0b4f4a; /* teal-strong: Hover, Text auf teal-soft */
+  --color-primary-900: #083a36;
 
-  /* ── Farben: Akzent (warmes Koralle — sparsam einsetzen) ────────── */
-  --color-accent-500: #e8834a;
-  --color-accent-600: #d6702f;
-  --color-accent-tint: #fdeee2; /* Hintergrund für Kai-Elemente, Hervorhebungen */
+  /* ── Farben: Akzent (Pulse — nur als Fläche mit dunkler Schrift) ── */
+  --color-accent-500: #ff7a3d;
+  --color-accent-600: #e5622a;
+  --color-accent-tint: #ffeadf;
 
-  /* ── Farben: Neutral (warmgetönt, bewusst nicht Tailwind-Slate) ── */
-  --color-neutral-0: #fbfaf8; /* Seitenhintergrund */
-  --color-neutral-50: #f6f4f1;
-  --color-neutral-100: #efebe6;
-  --color-neutral-200: #e2dcd4;
-  --color-neutral-300: #cbc2b6;
-  --color-neutral-400: #a89d8e;
-  --color-neutral-500: #8a7f70;
-  --color-neutral-600: #6b6255;
-  --color-neutral-700: #4f483d;
-  --color-neutral-800: #332f28;
-  --color-neutral-900: #1d1a15; /* Haupttextfarbe */
+  /* ── Farben: Neutral (kühl, leicht grünlich getönt) ─────────────── */
+  --color-neutral-0: #f5f8f7; /* surface: Seitenhintergrund */
+  --color-neutral-50: #eef3f2;
+  --color-neutral-100: #e4ecea;
+  --color-neutral-200: #d3dedb; /* line: Haarlinien, Kartenränder */
+  --color-neutral-300: #b3c3c0;
+  --color-neutral-400: #768c88; /* line-strong: Ränder von Eingabefeldern */
+  --color-neutral-500: #5f7572;
+  --color-neutral-600: #4b605d; /* ink-muted: Sekundärtext */
+  --color-neutral-700: #354a47;
+  --color-neutral-800: #213634;
+  --color-neutral-900: #0e2422; /* ink: Haupttextfarbe */
 
   /* ── Farben: Semantisch ──────────────────────────────────────────── */
   --color-success: #2f9e5b;
   --color-success-tint: #e8f6ee;
   --color-warning: #d97f16;
   --color-warning-tint: #fdf1e2;
-  --color-danger: #d14343;
-  --color-danger-tint: #fbeaea;
+  --color-danger: #b42318;
+  --color-danger-tint: #fbe9e7;
 
   /* ── Typografie ──────────────────────────────────────────────────── */
-  --font-display: "Fraunces", Georgia, serif;
-  --font-body: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
   /* Größe · Gewicht · Zeilenhöhe · Laufweite */
   --text-display-lg-size: 48px;
-  --text-display-lg-weight: 600;
+  --text-display-lg-weight: 700;
   --text-display-lg-leading: 1.1;
   --text-display-lg-tracking: -0.02em;
 
   --text-display-md-size: 36px;
-  --text-display-md-weight: 600;
+  --text-display-md-weight: 700;
   --text-display-md-leading: 1.15;
   --text-display-md-tracking: -0.01em;
 
@@ -113,10 +118,10 @@
   --radius-full: 9999px;
 
   /* ── Schatten (bewusster Bruch mit Linear — helles System braucht Elevation) ── */
-  --shadow-sm: 0 1px 2px rgba(29, 26, 21, 0.06);
-  --shadow-md: 0 2px 8px rgba(29, 26, 21, 0.08);
-  --shadow-lg: 0 8px 24px rgba(29, 26, 21, 0.1);
-  --shadow-focus-ring: 0 0 0 2px rgba(15, 124, 101, 0.4);
+  --shadow-sm: 0 1px 2px rgba(14, 36, 34, 0.06);
+  --shadow-md: 0 2px 8px rgba(14, 36, 34, 0.08);
+  --shadow-lg: 0 8px 24px rgba(14, 36, 34, 0.1);
+  --shadow-focus-ring: 0 0 0 2px rgba(15, 118, 110, 0.4);
 
   /* ── Motion ──────────────────────────────────────────────────────── */
   --duration-fast: 120ms;

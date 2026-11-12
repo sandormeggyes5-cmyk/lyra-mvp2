@@ -24,31 +24,38 @@ class CanvasErrorBoundary extends Component<{ children: ReactNode }, { error: st
 }
 
 // ── Typ-Definitionen ──────────────────────────────────────────────────────────
-type ExerciseKey = 'push-up' | 'jogging' | 'circle-crunch';
+type ExerciseKey = 'push-up' | 'jogging' | 'circle-crunch' | 'squat';
 
-// Körpertyp-Variante desselben Bewegungsablaufs — z. B. dieselbe Kniebeuge,
-// aber mit einer älteren oder vollschlankeren Figur demonstriert. Erzeugung
-// via MakeHuman (Regler für Alter/Gewicht) → Export FBX → Mixamo-Auto-Rigger
-// → bestehende Animation darauf anwenden → Export. 'standard' ist immer die
-// Mindest-Variante; weitere sind optional pro Übung.
-type BodyType = 'standard' | 'senior' | 'plus-size';
+// Körpertyp-/Haltungsvariante desselben Bewegungsablaufs — z. B. dieselbe
+// Kniebeuge, aber mit anderem Körperbau oder einer anderen Haltung
+// demonstriert. Erzeugung via Blender+MPFB2 (Regler für Gewicht/Muskulatur
+// bzw. Pose) → Export FBX → Mixamo-Auto-Rigger → bestehende Animation
+// darauf anwenden → Export (siehe docs/TASK_AVATAR_BODY_TYPES.md). Jede
+// Übung hat eine eigene Mindest-Variante (siehe `defaultVariant` pro
+// Übung) als Fallback; weitere sind optional.
+export type BodyType = 'standard' | 'senior' | 'plus-size' | 'schlank' | 'mittel' | 'kraeftig' | 'hohlkreuz';
 
 const BODY_TYPE_LABELS: Record<BodyType, string> = {
   standard: 'Standard',
   senior: 'Ältere Person',
   'plus-size': 'Größerer Körperbau',
+  schlank: 'Schlank',
+  mittel: 'Mittel',
+  kraeftig: 'Kräftig',
+  hohlkreuz: 'Hohlkreuz',
 };
 
-const BODY_TYPE_ORDER: BodyType[] = ['standard', 'senior', 'plus-size'];
+const BODY_TYPE_ORDER: BodyType[] = ['standard', 'senior', 'plus-size', 'schlank', 'mittel', 'kraeftig', 'hohlkreuz'];
 
 interface ExerciseConfig {
   label: string;
   cameraPos: [number, number, number];
   cameraTarget: [number, number, number];
   tips: string[];
-  // Pfad pro verfügbarer Körpertyp-Variante. Fehlt eine Variante für eine
-  // Übung, wird 'standard' als Fallback verwendet (siehe resolveAvatarPath).
+  // Pfad pro verfügbarer Körpertyp-/Haltungsvariante. Fehlt eine Variante,
+  // wird `defaultVariant` als Fallback verwendet (siehe resolveAvatarPath).
   variants: Partial<Record<BodyType, string>>;
+  defaultVariant: BodyType;
 }
 
 const EXERCISES: Record<ExerciseKey, ExerciseConfig> = {
@@ -58,6 +65,7 @@ const EXERCISES: Record<ExerciseKey, ExerciseConfig> = {
     cameraTarget: [0, 60, 0],
     tips: ['Körper gerade wie ein Brett halten', 'Ellbogen nah am Körper führen', 'Bauch die ganze Zeit aktiv halten'],
     variants: { standard: '/avatars/push-up.fbx' },
+    defaultVariant: 'standard',
   },
   'jogging': {
     label: 'Joggen',
@@ -65,6 +73,7 @@ const EXERCISES: Record<ExerciseKey, ExerciseConfig> = {
     cameraTarget: [0, 80, 0],
     tips: ['Aufrecht laufen, Blick nach vorne', 'Arme locker im 90°-Winkel schwingen', 'Weiche Landung mit dem Mittelfuß'],
     variants: { standard: '/avatars/jogging.fbx' },
+    defaultVariant: 'standard',
   },
   'circle-crunch': {
     label: 'Core-Übung',
@@ -72,11 +81,29 @@ const EXERCISES: Record<ExerciseKey, ExerciseConfig> = {
     cameraTarget: [0, 50, 0],
     tips: ['Lendenwirbel am Boden halten', 'Bewegung aus dem Bauch, nicht dem Schwung', 'Gleichmäßig atmen, nicht pressen'],
     variants: { standard: '/avatars/circle-crunch.fbx' },
+    defaultVariant: 'standard',
+  },
+  'squat': {
+    label: 'Kniebeuge',
+    cameraPos: [180, 90, 130],
+    cameraTarget: [0, 60, 0],
+    tips: ['Knie in Richtung Fußspitzen halten', 'Rücken gerade, Blick nach vorne', 'Gewicht gleichmäßig auf beide Beine verteilen'],
+    // Prototyp (siehe Plan "3D-Avatar-Varianten — Prototyp Kniebeuge"): die
+    // vier FBX-Dateien existieren noch nicht, werden manuell über
+    // Blender+MPFB2+Mixamo erstellt (docs/TASK_AVATAR_BODY_TYPES.md). Bis
+    // dahin greift CanvasErrorBoundary beim Ladeversuch.
+    variants: {
+      schlank: '/avatars/kniebeuge-schlank.fbx',
+      mittel: '/avatars/kniebeuge-mittel.fbx',
+      kraeftig: '/avatars/kniebeuge-kraeftig.fbx',
+      hohlkreuz: '/avatars/kniebeuge-hohlkreuz.fbx',
+    },
+    defaultVariant: 'mittel',
   },
 };
 
 function resolveAvatarPath(config: ExerciseConfig, bodyType: BodyType): string {
-  return config.variants[bodyType] ?? config.variants.standard!;
+  return config.variants[bodyType] ?? config.variants[config.defaultVariant]!;
 }
 
 // ── 3D-Modell mit Animation ───────────────────────────────────────────────────
@@ -122,7 +149,7 @@ function LoadingMesh() {
   return (
     <mesh ref={ref} position={[0, 80, 0]}>
       <capsuleGeometry args={[20, 80, 6, 12]} />
-      <meshStandardMaterial color="#93c5fd" wireframe />
+      <meshStandardMaterial color="#5fa89f" wireframe />
     </mesh>
   );
 }
@@ -131,7 +158,7 @@ function LoadingMesh() {
 function Environment() {
   return (
     <>
-      <color attach="background" args={['#f8fafc']} />
+      <color attach="background" args={['#f5f8f7']} />
       <ambientLight intensity={0.7} />
       <directionalLight
         position={[200, 300, 150]}
@@ -149,7 +176,7 @@ function Environment() {
       <directionalLight position={[-150, 200, -100]} intensity={0.5} />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[1000, 1000]} />
-        <meshStandardMaterial color="#e2e8f0" />
+        <meshStandardMaterial color="#d3dedb" />
       </mesh>
       <ContactShadows
         position={[0, 1, 0]}
@@ -186,6 +213,13 @@ function Scene({ config, avatarPath }: { config: ExerciseConfig; avatarPath: str
 // ── Öffentliche Komponente ────────────────────────────────────────────────────
 interface Props {
   exerciseName: string;
+  // Optionale Vorauswahl, z. B. abgeleitet aus einer bereits vom
+  // Therapeuten zugewiesenen ExerciseAdaptation (siehe
+  // ADAPTATION_LABEL_TO_VARIANT in ProgramItemEditor.tsx/PatientPortalPage.tsx).
+  // Bleibt manuell überschreibbar — keine Sperre, keine automatische
+  // Ableitung aus Patientenmerkmalen, nur eine Voreinstellung passend zu
+  // einer bereits explizit getroffenen Entscheidung.
+  preferredVariant?: BodyType;
 }
 
 // Exakte Zuordnung statt Schlüsselwort-Raten: mit wachsendem Übungskatalog
@@ -195,23 +229,31 @@ const EXERCISE_NAME_TO_KEY: Record<string, ExerciseKey> = {
   'Liegestütze': 'push-up',
   'Joggen': 'jogging',
   'Planke': 'circle-crunch',
+  'Kniebeuge': 'squat',
 };
 
 function getExerciseKey(name: string): ExerciseKey | null {
   return EXERCISE_NAME_TO_KEY[name] ?? null;
 }
 
-export function ExerciseAvatar3D({ exerciseName }: Props) {
+export function ExerciseAvatar3D({ exerciseName, preferredVariant }: Props) {
   const [open, setOpen] = useState(false);
+  const key = getExerciseKey(exerciseName);
+  const config = key ? EXERCISES[key] : null;
   // Bewusst lokaler, manuell gesetzter State — kein Ableiten aus
   // Patientenmerkmalen (Alter, o.ä.). Gleiches Prinzip wie bei den
   // Übungs-Anpassungen (AdaptationPicker.tsx): die Auswahl ist immer eine
-  // explizite Handlung, niemals eine automatische Zuordnung.
-  const [bodyType, setBodyType] = useState<BodyType>('standard');
-  const key = getExerciseKey(exerciseName);
-  if (!key) return null;
+  // explizite Handlung, niemals eine automatische Zuordnung. `preferredVariant`
+  // ist selbst das Ergebnis einer solchen expliziten Handlung (zugewiesene
+  // Anpassung) und bleibt jederzeit manuell überschreibbar.
+  const [bodyType, setBodyType] = useState<BodyType>(preferredVariant ?? config?.defaultVariant ?? 'standard');
 
-  const config = EXERCISES[key];
+  useEffect(() => {
+    if (preferredVariant) setBodyType(preferredVariant);
+  }, [preferredVariant]);
+
+  if (!key || !config) return null;
+
   const availableBodyTypes = BODY_TYPE_ORDER.filter((bt) => config.variants[bt]);
   const avatarPath = resolveAvatarPath(config, bodyType);
 

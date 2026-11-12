@@ -69,7 +69,10 @@ export function ExercisePicker({ addedExerciseIds, onAdd }: Props) {
 
   return (
     <div className="flex flex-col gap-3">
-      <MuscleMap mode="interactive" activeRegion={activeRegion} onRegionSelect={setActiveRegion} />
+      {/* Karte bleibt beim Scrollen oben stehen, die Liste läuft darunter weg. */}
+      <div className="sticky top-16 z-10 bg-white pt-3 pb-3 border-b border-neutral-100">
+        <MuscleMap mode="interactive" activeRegion={activeRegion} onRegionSelect={setActiveRegion} />
+      </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <Select aria-label="Körperregion filtern" value={bodyRegion} onChange={(e) => setBodyRegion(e.target.value)}>
@@ -99,7 +102,7 @@ export function ExercisePicker({ addedExerciseIds, onAdd }: Props) {
       {error && <p role="alert" aria-live="polite" className="text-body-sm text-danger">{error}</p>}
 
       {!loading && !error && (
-        <ul className="flex flex-col gap-1.5 max-h-96 overflow-y-auto">
+        <ul className="flex flex-col gap-1.5">
           {visibleExercises.map((ex) => {
             const added = addedExerciseIds.includes(ex.id);
             return (

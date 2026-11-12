@@ -124,6 +124,14 @@ const data: ExerciseAdaptations[] = [
       { labelDe: 'Am Türrahmen festhalten', category: 'hilfsmittel', instructionDe: 'Halte dich leicht an einem Türrahmen oder einer stabilen Kante fest, für mehr Balance.' },
       { labelDe: 'Kleinerer Beugewinkel', category: 'haltung', instructionDe: 'Beuge die Knie nur bis zur Hälfte, statt bis die Oberschenkel waagerecht sind.' },
       { labelDe: 'Eingeschränkte Sprunggelenksbeweglichkeit', category: 'beweglichkeit', instructionDe: 'Leg ein flaches Kissen unter die Fersen, wenn du sonst nach hinten kippst.' },
+      // Prototyp 3D-Avatar-Varianten (siehe Plan "3D-Avatar-Varianten —
+      // Prototyp Kniebeuge"): Auswahl löst in ExerciseAvatar3D.tsx eine
+      // passende Körperbau-/Haltungs-Variante der 3D-Demo aus (siehe
+      // ADAPTATION_LABEL_TO_VARIANT in ProgramItemEditor.tsx/
+      // PatientPortalPage.tsx) — rein darstellend, keine Bewegungsänderung.
+      { labelDe: 'Körperbau: schlanker', category: 'koerperbau', instructionDe: 'Diese Übung wird in der 3D-Demo mit einem schlankeren Körperbau gezeigt.' },
+      { labelDe: 'Körperbau: kräftiger', category: 'koerperbau', instructionDe: 'Diese Übung wird in der 3D-Demo mit einem kräftigeren Körperbau gezeigt.' },
+      { labelDe: 'Haltung: Hohlkreuz', category: 'haltung', instructionDe: 'Diese Übung wird in der 3D-Demo mit einer Hohlkreuz-Haltung gezeigt.' },
     ],
   },
   {
