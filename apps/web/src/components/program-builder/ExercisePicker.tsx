@@ -70,7 +70,7 @@ export function ExercisePicker({ addedExerciseIds, onAdd }: Props) {
   return (
     <div className="flex flex-col gap-3">
       {/* Karte bleibt beim Scrollen oben stehen, die Liste läuft darunter weg. */}
-      <div className="sticky top-0 z-10 bg-white pb-3 border-b border-neutral-100">
+      <div className="sticky top-16 z-10 bg-white pt-3 pb-3 border-b border-neutral-100">
         <MuscleMap mode="interactive" activeRegion={activeRegion} onRegionSelect={setActiveRegion} />
       </div>
 

@@ -255,7 +255,7 @@ export function ProgramBuilderPage({ mode }: Props) {
         </div>
 
         {/* Rechte Spalte: Programm-Details */}
-        <div className="flex flex-col gap-4 lg:sticky lg:top-4">
+        <div className="flex flex-col gap-4 lg:sticky lg:top-20">
           <div className="bg-white rounded-xl shadow-sm p-5 flex flex-col gap-3">
             <Input
               label="Programmname"
