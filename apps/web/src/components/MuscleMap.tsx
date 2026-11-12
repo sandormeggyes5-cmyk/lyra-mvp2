@@ -154,7 +154,7 @@ export function MuscleMap({ mode, muscles, activeRegion, onRegionSelect, classNa
 
       <svg
         viewBox={viewBox}
-        className={`h-64 w-auto mx-auto motion-safe:transition-opacity motion-safe:duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
+        className={`h-80 sm:h-[28rem] max-w-full w-auto mx-auto motion-safe:transition-opacity motion-safe:duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
         role="img"
         aria-label={`Körperkarte, ${view === 'front' ? 'Vorderseite' : 'Rückseite'}, ${gender === 'male' ? 'männlich' : 'weiblich'}`}
       >

@@ -247,7 +247,7 @@ export function ProgramBuilderPage({ mode }: Props) {
         {mode === 'create' ? `Neues Programm für ${patientName}` : `Programm bearbeiten: ${patientName}`}
       </h1>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Linke Spalte: Übungsbibliothek */}
         <div className="bg-white rounded-xl shadow-sm p-5">
           <h2 className="text-body-sm font-semibold text-neutral-700 mb-3">Übungsbibliothek</h2>
@@ -255,7 +255,7 @@ export function ProgramBuilderPage({ mode }: Props) {
         </div>
 
         {/* Rechte Spalte: Programm-Details */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 lg:sticky lg:top-4">
           <div className="bg-white rounded-xl shadow-sm p-5 flex flex-col gap-3">
             <Input
               label="Programmname"
