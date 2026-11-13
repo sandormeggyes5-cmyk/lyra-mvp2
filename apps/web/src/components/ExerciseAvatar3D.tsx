@@ -11,8 +11,8 @@ class CanvasErrorBoundary extends Component<{ children: ReactNode }, { error: st
     if (this.state.error) {
       return (
         <div className="flex flex-col items-center justify-center h-full gap-2 p-4 text-center">
-          <p className="text-sm font-medium text-slate-600">3D-Modell konnte nicht geladen werden</p>
-          <p className="text-xs text-slate-400">
+          <p className="text-sm font-medium text-neutral-700">3D-Modell konnte nicht geladen werden</p>
+          <p className="text-xs text-neutral-500">
             Lade die Datei erneut von Mixamo herunter:<br />
             Format <strong>FBX · With Skin · 30fps</strong>, pro Übung ein gerigter Charakter je Körpertyp-Variante.
           </p>
@@ -125,22 +125,22 @@ const EXERCISES: Record<ExerciseKey, ExerciseConfig> = {
   },
   'squat': {
     label: 'Kniebeuge',
-    cameraPos: [180, 90, 130],
-    cameraTarget: [0, 60, 0],
+    cameraPos: [216, 121, 156],
+    cameraTarget: [0, 85, 0],
     tips: ['Knie in Richtung Fußspitzen halten', 'Rücken gerade, Blick nach vorne', 'Gewicht gleichmäßig auf beide Beine verteilen'],
-    // Prototyp (siehe Plan "3D-Avatar-Varianten — Prototyp Kniebeuge"): die
-    // vier FBX-Dateien existieren noch nicht, werden manuell über
-    // Blender+MPFB2+Mixamo erstellt (docs/TASK_AVATAR_BODY_TYPES.md). Bis
-    // dahin greift CanvasErrorBoundary beim Ladeversuch.
-    variants: {
-      schlank: '/avatars/kniebeuge-schlank.fbx',
-      mittel: '/avatars/kniebeuge-mittel.fbx',
-      kraeftig: '/avatars/kniebeuge-kraeftig.fbx',
-      hohlkreuz: '/avatars/kniebeuge-hohlkreuz.fbx',
-    },
-    defaultVariant: 'mittel',
+    // Bis die Körperbau-/Haltungsvarianten existieren (Prototyp, siehe
+    // docs/TASK_AVATAR_BODY_TYPES.md – Blender+MPFB2+Mixamo), zeigt die
+    // Kniebeuge die Mixamo-Standardanimation. Eine zugewiesene Variante
+    // (preferredVariant) fällt über resolveAvatarPath auf „standard“ zurück.
+    // Varianten wieder eintragen, sobald die Dateien in public/avatars/ liegen:
+    //   schlank: '/avatars/kniebeuge-schlank.fbx', mittel: '/avatars/kniebeuge-mittel.fbx',
+    //   kraeftig: '/avatars/kniebeuge-kraeftig.fbx', hohlkreuz: '/avatars/kniebeuge-hohlkreuz.fbx',
+    variants: { standard: '/avatars/squat.fbx' },
+    defaultVariant: 'standard',
   },
   // ── Blender-Animationen (Kai-Prototyp lyra-app, Nov. 2026) ──
+  // Kameras aus dem Prototyp; bei Übungen im Stand höher und 20 % weiter weg,
+  // weil die Box hier flacher ist (sonst ist der Kopf abgeschnitten).
   'bridge': {
     label: 'Brücke',
     cameraPos: [155, 105, 55],
@@ -199,16 +199,16 @@ const EXERCISES: Record<ExerciseKey, ExerciseConfig> = {
   },
   'wall-sit': {
     label: 'Wandsitz',
-    cameraPos: [160, 90, 130],
-    cameraTarget: [0, 55, 0],
+    cameraPos: [192, 127, 156],
+    cameraTarget: [0, 85, 0],
     tips: ['Rücken flächig an der Wand', 'Oberschenkel parallel zum Boden', 'Knie über den Knöcheln'],
     variants: { standard: '/avatars/wall-sit.fbx' },
     defaultVariant: 'standard',
   },
   'mini-squat': {
     label: 'Mini-Squat',
-    cameraPos: [170, 100, 190],
-    cameraTarget: [0, 75, 0],
+    cameraPos: [204, 115, 228],
+    cameraTarget: [0, 85, 0],
     tips: ['Füße hüftbreit, Gewicht auf beiden Füßen', 'Knie nur ca. 30° beugen, über der zweiten Zehe', 'Rücken gerade, langsam aufrichten'],
     variants: { standard: '/avatars/mini-squat.fbx' },
     defaultVariant: 'standard',
@@ -223,8 +223,8 @@ const EXERCISES: Record<ExerciseKey, ExerciseConfig> = {
   },
   'lateral-raise': {
     label: 'Seitliches Armheben',
-    cameraPos: [160, 100, 140],
-    cameraTarget: [0, 75, 0],
+    cameraPos: [192, 115, 168],
+    cameraTarget: [0, 85, 0],
     tips: ['Arm seitlich bis Schulterhöhe heben', 'Kontrolliert absenken', 'Nicht schwungholen'],
     variants: { standard: '/avatars/lateral-raise.fbx' },
     defaultVariant: 'standard',
@@ -247,7 +247,7 @@ const EXERCISES: Record<ExerciseKey, ExerciseConfig> = {
   },
   'standing-hip-extension': {
     label: 'Hüftextension im Stand',
-    cameraPos: [270, 125, 160],
+    cameraPos: [324, 133, 194],
     cameraTarget: [0, 85, -10],
     tips: ['Gewicht aufs Standbein, Knie locker', 'Gestrecktes Bein nach hinten heben, Gesäß anspannen', 'Kein Hohlkreuz, Becken bleibt waagerecht'],
     variants: { standard: '/avatars/standing-hip-extension.fbx' },
@@ -271,7 +271,7 @@ const EXERCISES: Record<ExerciseKey, ExerciseConfig> = {
   },
   'calf-raise': {
     label: 'Wadenheben',
-    cameraPos: [180, 115, 190],
+    cameraPos: [216, 120, 228],
     cameraTarget: [0, 88, 0],
     tips: ['Langsam über den Fußballen hochdrücken', 'Oben kurz halten', 'Kontrolliert absenken'],
     variants: { standard: '/avatars/calf-raise.fbx' },
@@ -375,8 +375,8 @@ const EXERCISES: Record<ExerciseKey, ExerciseConfig> = {
   },
   'wall-angels': {
     label: 'Wandengel',
-    cameraPos: [160, 100, 140],
-    cameraTarget: [0, 80, 0],
+    cameraPos: [192, 109, 168],
+    cameraTarget: [0, 85, 0],
     tips: ['Rücken und Arme bleiben an der Wand', 'Langsam auf und ab führen', 'Schulterblätter stabil halten'],
     variants: { standard: '/avatars/wall-angels.fbx' },
     defaultVariant: 'standard',
@@ -391,16 +391,16 @@ const EXERCISES: Record<ExerciseKey, ExerciseConfig> = {
   },
   'lateral-lunge': {
     label: 'Seitlicher Ausfallschritt',
-    cameraPos: [150, 110, 260],
-    cameraTarget: [0, 65, 0],
+    cameraPos: [180, 139, 312],
+    cameraTarget: [0, 85, 0],
     tips: ['Großer Schritt zur Seite, Fuß setzt flach auf', 'Knie über dem Fuß beugen, Hüfte nach hinten', 'Anderes Bein bleibt gestreckt, Sohle am Boden'],
     variants: { standard: '/avatars/lateral-lunge.fbx' },
     defaultVariant: 'standard',
   },
   'lunge': {
     label: 'Ausfallschritt',
-    cameraPos: [290, 110, 130],
-    cameraTarget: [0, 78, 40],
+    cameraPos: [348, 123, 148],
+    cameraTarget: [0, 85, 40],
     tips: ['Großer Schritt nach vorn', 'Vorderes Knie über dem Fuß', 'Oberkörper aufrecht'],
     variants: { standard: '/avatars/lunge.fbx' },
     defaultVariant: 'standard',
@@ -431,8 +431,8 @@ const EXERCISES: Record<ExerciseKey, ExerciseConfig> = {
   },
   'sumo-squat': {
     label: 'Sumo-Kniebeuge',
-    cameraPos: [170, 100, 210],
-    cameraTarget: [0, 65, 0],
+    cameraPos: [204, 127, 252],
+    cameraTarget: [0, 85, 0],
     tips: ['Weiter Stand, Fußspitzen leicht nach außen', 'Knie schieben über die Fußspitzen nach außen', 'Oberkörper aufrecht, bis die Oberschenkel etwa waagerecht sind'],
     variants: { standard: '/avatars/sumo-squat.fbx' },
     defaultVariant: 'standard',
@@ -638,7 +638,7 @@ export function ExerciseAvatar3D({ exerciseName, preferredVariant }: Props) {
     <div className="mt-2">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
+        className="flex items-center gap-1.5 text-xs font-medium text-primary-600 hover:text-primary-800 transition-colors"
       >
         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
@@ -647,7 +647,7 @@ export function ExerciseAvatar3D({ exerciseName, preferredVariant }: Props) {
       </button>
 
       {open && (
-        <div className="mt-3 rounded-xl overflow-hidden border border-blue-100 bg-blue-50">
+        <div className="mt-3 rounded-xl overflow-hidden border border-primary-100 bg-primary-50">
           {availableBodyTypes.length > 1 && (
             <div className="flex gap-1.5 px-3 pt-3">
               {availableBodyTypes.map((bt) => (
@@ -657,8 +657,8 @@ export function ExerciseAvatar3D({ exerciseName, preferredVariant }: Props) {
                   onClick={() => setBodyType(bt)}
                   className={`text-[11px] font-medium px-2 py-1 rounded-full transition-colors ${
                     bodyType === bt
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-blue-700 border border-blue-200 hover:bg-blue-100'
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-white text-primary-700 border border-primary-200 hover:bg-primary-100'
                   }`}
                 >
                   {BODY_TYPE_LABELS[bt]}
@@ -682,7 +682,7 @@ export function ExerciseAvatar3D({ exerciseName, preferredVariant }: Props) {
 
           {/* Steuerung-Hinweis + Tips */}
           <div className="px-4 py-3">
-            <p className="text-xs text-slate-400 mb-2 flex items-center gap-1">
+            <p className="text-xs text-neutral-500 mb-2 flex items-center gap-1">
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zM12 2.25V4.5m5.834.166l-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243l-1.59-1.59" />
               </svg>
@@ -690,8 +690,8 @@ export function ExerciseAvatar3D({ exerciseName, preferredVariant }: Props) {
             </p>
             <ul className="space-y-1">
               {config.tips.map((tip) => (
-                <li key={tip} className="flex items-start gap-1.5 text-xs text-blue-700">
-                  <span className="text-blue-400 mt-0.5">✓</span>
+                <li key={tip} className="flex items-start gap-1.5 text-xs text-primary-700">
+                  <span className="text-primary-400 mt-0.5">✓</span>
                   {tip}
                 </li>
               ))}
